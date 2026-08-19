@@ -1,0 +1,75 @@
+---
+title: DokoSoko documentation
+description: Ship trusted product knowledge, packages, tools, and short-lived credentials to coding agents.
+template: splash
+hero:
+  title: Your product, ready for coding agents.
+  tagline: DokoSoko is a self-hosted delivery control plane for publishing trustworthy knowledge, packages, policy-wrapped tools, and short-lived credentials.
+  image:
+    html: |
+      <div class="delivery-preview" role="img" aria-label="DokoSoko validates delivery policy before exposing product resources to coding agents">
+        <div class="delivery-preview__header">
+          <span class="delivery-preview__status"><span></span>Delivery active</span>
+          <code>production</code>
+        </div>
+        <div class="delivery-preview__flow">
+          <div class="delivery-preview__node delivery-preview__node--source">
+            <span class="delivery-preview__eyebrow">Trusted sources</span>
+            <strong>Product resources</strong>
+            <span>Reviewed snapshots</span>
+          </div>
+          <div class="delivery-preview__connector">
+            <span>Policy checked</span>
+          </div>
+          <div class="delivery-preview__node delivery-preview__node--control">
+            <span class="delivery-preview__mark">D</span>
+            <div>
+              <span class="delivery-preview__eyebrow">Control plane</span>
+              <strong>DokoSoko</strong>
+            </div>
+          </div>
+          <div class="delivery-preview__surfaces" aria-hidden="true">
+            <span>Knowledge</span>
+            <span>Packages</span>
+            <span>Tools</span>
+            <span>Credentials</span>
+          </div>
+        </div>
+        <div class="delivery-preview__footer">
+          <span><span class="delivery-preview__check">✓</span>Scoped access</span>
+          <span><span class="delivery-preview__check">✓</span>Audited delivery</span>
+        </div>
+      </div>
+  actions:
+    - text: Get started
+      link: /getting-started/quickstart/
+      icon: right-arrow
+    - text: Why DokoSoko?
+      link: /concepts/why-dokosoko/
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## One control plane, four delivery surfaces
+
+<CardGrid stagger>
+	<Card title="Knowledge" icon="open-book">
+		Crawl, review, quarantine, and publish product guidance from immutable snapshots.
+	</Card>
+	<Card title="Packages" icon="puzzle">
+		Deliver public artifacts or stream credential-backed packages without exposing upstream secrets.
+	</Card>
+	<Card title="Tools" icon="setting">
+		Turn fixed HTTPS actions into schema-validated, entitlement-aware MCP tools.
+	</Card>
+	<Card title="Projects & credentials" icon="padlock">
+		Issue short-lived vendor resources through a standard, audited Provider API contract.
+	</Card>
+</CardGrid>
+
+## Built around explicit trust boundaries
+
+DokoSoko keeps resources private by default, separates user login from per-operation authorization, and never sends an inbound DokoSoko token to a vendor API. Public access is opt-in, read-only, and limited to resources that are both published and explicitly public.
+
+<LinkCard title="Understand the model" description="See the architecture, actors, and safety guarantees before you deploy." href="/concepts/why-dokosoko/" />

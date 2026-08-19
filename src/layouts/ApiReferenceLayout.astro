@@ -1,0 +1,167 @@
+---
+import { ScalarComponent } from '@scalar/astro';
+
+interface Props {
+	title: string;
+	description: string;
+	specUrl: string;
+	guideUrl: string;
+}
+
+const { title, description, specUrl, guideUrl } = Astro.props;
+
+const configuration = {
+	url: specUrl,
+	theme: 'default' as const,
+	layout: 'modern' as const,
+	showOperationId: true,
+	modelsSectionLabel: 'Schemas',
+	hideTestRequestButton: true,
+	hideClientButton: true,
+	showDeveloperTools: 'never' as const,
+	agent: { disabled: true },
+	mcp: { disabled: true },
+	persistAuth: false,
+	telemetry: false,
+	documentDownloadType: 'both' as const,
+};
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#111827" />
+		<title>{title} | DokoSoko API Reference</title>
+	</head>
+	<body>
+		<header class="api-reference-bar">
+			<div class="api-reference-bar__identity">
+				<a class="api-reference-bar__brand" href="/">DokoSoko</a>
+				<span aria-hidden="true">/</span>
+				<strong>{title}</strong>
+			</div>
+			<nav aria-label="API reference navigation">
+				<a href="/api/control-plane/">Control Plane</a>
+				<a href="/api/provider/">Provider</a>
+				<a href="/api/vendor-hooks/">Vendor Hooks</a>
+				<a href={specUrl} download>OpenAPI YAML</a>
+				<a class="api-reference-bar__back" href={guideUrl}>Guide</a>
+			</nav>
+		</header>
+		<div class="api-reference-notice" role="note">
+			<strong>Read-only explorer.</strong> Request execution and authentication input are disabled. Use the generated examples as implementation references.
+		</div>
+		<main>
+			<ScalarComponent renderMode="client" configuration={configuration} />
+		</main>
+	</body>
+</html>
+
+<style is:global>
+	:root {
+		font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		color-scheme: light dark;
+	}
+
+	* {
+		box-sizing: border-box;
+	}
+
+	body {
+		margin: 0;
+		background: #0b1220;
+	}
+
+	.api-reference-bar {
+		display: flex;
+		position: sticky;
+		z-index: 1000;
+		top: 0;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		min-height: 4rem;
+		padding: 0.75rem clamp(1rem, 3vw, 2.5rem);
+		border-bottom: 1px solid #1e293b;
+		background: rgb(11 18 32 / 96%);
+		box-shadow: 0 0.5rem 2rem rgb(2 6 23 / 18%);
+		color: #e2e8f0;
+		backdrop-filter: blur(12px);
+	}
+
+	.api-reference-bar__identity,
+	.api-reference-bar nav {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.api-reference-bar__brand {
+		color: #f8fafc;
+		font-size: 1.15rem;
+		font-weight: 780;
+		letter-spacing: -0.025em;
+		text-decoration: none;
+	}
+
+	.api-reference-bar nav {
+		flex-wrap: wrap;
+		justify-content: flex-end;
+	}
+
+	.api-reference-bar nav a {
+		padding: 0.45rem 0.65rem;
+		border-radius: 0.5rem;
+		color: #bfdbfe;
+		font-size: 0.84rem;
+		font-weight: 650;
+		text-decoration: none;
+	}
+
+	.api-reference-bar nav a:hover,
+	.api-reference-bar nav a:focus-visible {
+		background: #172554;
+		color: #eff6ff;
+	}
+
+	.api-reference-bar nav .api-reference-bar__back {
+		border: 1px solid #3b82f6;
+		background: #1d4ed8;
+		color: white;
+	}
+
+	.api-reference-notice {
+		padding: 0.65rem clamp(1rem, 3vw, 2.5rem);
+		border-bottom: 1px solid #1e3a8a;
+		background: #172554;
+		color: #dbeafe;
+		font-size: 0.82rem;
+		line-height: 1.5;
+	}
+
+	main {
+		min-height: calc(100vh - 6.75rem);
+		background: white;
+	}
+
+	@media (max-width: 70rem) {
+		.api-reference-bar {
+			position: relative;
+			align-items: flex-start;
+			flex-direction: column;
+		}
+
+		.api-reference-bar nav {
+			justify-content: flex-start;
+		}
+	}
+
+	@media (max-width: 40rem) {
+		.api-reference-bar nav a {
+			padding-inline: 0.3rem;
+		}
+	}
+</style>

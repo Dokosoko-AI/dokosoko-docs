@@ -1,0 +1,24 @@
+{
+  "name": "dokosoko-docs",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "pnpm validate:api && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "validate:api": "node ./scripts/validate-api-contracts.mjs"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.41.7",
+    "@scalar/astro": "^0.4.14",
+    "astro": "^7.1.6",
+    "astro-mermaid": "^2.1.0",
+    "mermaid": "^11.16.1",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "js-yaml": "4.3.1"
+  }
+}
