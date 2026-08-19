@@ -60,7 +60,7 @@ Use the OAuth flow to obtain a product-bound access token. The private surface c
 
 5. **Verify the entitled tool set.**
 
-   Reload MCP tools and confirm the client sees only the knowledge, packages, custom tools, and Provider API capabilities allowed for that account. Repeat with a minimally entitled test account before rollout.
+   Reload MCP tools and confirm the client sees `product.get_manifest`, `product.versions.list`, and only the knowledge, packages, custom tools, and Provider API capabilities allowed for that account and effective product version. Repeat with a minimally entitled test account before rollout.
 
 If a client cannot perform the OAuth flow itself, use an MCP-capable adapter that can complete authorization-code + PKCE and attach the resulting token as an HTTP bearer token. Do not paste a long-lived vendor credential into client configuration.
 
@@ -152,6 +152,19 @@ curl --request POST \
 ```
 
 For private MCP, use the private URL and add `--header "Authorization: Bearer $DOKOSOKO_ACCESS_TOKEN"`. A successful response contains a JSON-RPC `result.tools` array. An empty result from Public MCP usually means no resource is simultaneously published and public, or Public MCP is still disabled.
+
+## Product and version discovery
+
+DokoSoko resolves a product version from the authenticated vendor-organisation claim before returning discovery or executing a managed custom tool. An exact customer pin wins; otherwise the product follows its configured Latest or LTS channel and safe fallbacks.
+
+Use `server/discover` to read the complete `result.product` manifest, or call these built-in tools:
+
+| Tool | Returns |
+| --- | --- |
+| `product.get_manifest` | Description, effective version, selection source, selected API releases, safe artifact metadata, and available versions |
+| `product.versions.list` | Effective version plus Latest, LTS, deprecated, replacement, and sunset metadata for all product versions |
+
+The product version is a compatibility snapshot and may contain independently versioned APIs—for example Voice API v3 and Messages API v2. It is not the MCP protocol revision. See [Build a Product Definition](/guides/product-definitions/#what-agents-discover) for the complete model.
 
 ## Widget loaders
 

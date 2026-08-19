@@ -17,6 +17,10 @@ An organisation is the top-level administrative and audit boundary. Use a stable
 
 A product owns its sources, packages, custom tools, MCP endpoints, widget snippets, identity configuration, providers, analytics, and integration runs. New products begin private and have Public MCP disabled.
 
+After attaching the first API specification, documentation site, package, repository, tool, or MCP connection, [build a Product Definition](/guides/product-definitions/). The auto-magic builder joins those artifacts to independently versioned API releases and proposes a compatibility profile for review.
+
+Before sharing MCP, open **Product discovery & versions**, write the agent-facing product description, choose the default Latest or LTS channel, and publish an immutable product-version snapshot from a reviewed compatibility profile. Add exact customer pins only when a customer must remain on a specific snapshot.
+
 ## 3. Add environments
 
 Create at least one non-production environment and one production environment when vendor systems distinguish them. Provider projects and credential leases are environment-scoped.
@@ -25,6 +29,7 @@ Create at least one non-production environment and one production environment wh
 
 Start with the smallest useful path:
 
+- build a Product Definition from an OpenAPI specification and its SDK package;
 - publish a documentation source for knowledge retrieval;
 - add an SDK package for installation guidance;
 - expose one fixed API action as a custom tool;

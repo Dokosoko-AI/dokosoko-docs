@@ -49,18 +49,28 @@ DokoSoko connects to fixed HTTPS destinations: a vendor OIDC provider, entitleme
 ```mermaid
 flowchart TD
     Org[Organisation] --> Product[Product]
+    Product --> Definition[Product Definition]
+    Definition --> Capability[API capabilities]
+    Capability --> Release[Independent API releases]
+    Release --> Bindings[Version bindings]
+    Definition --> Profiles[Compatibility profiles]
+    Profiles --> ProductVersion[Immutable product versions]
+    ProductVersion --> Channels[Latest, LTS, deprecated]
+    ProductVersion --> Pins[Exact customer pins]
+    Product --> Attached[Attached product artifacts]
+    Attached --> Sources[Specifications and docs]
+    Attached --> Packages[Packages and repositories]
+    Attached --> Tools[Custom tools]
+    Attached --> MCPConnections[MCP connections and schema pins]
+    Bindings -. joins .-> Attached
     Product --> Env[Environments]
-    Product --> Sources[Sources]
-    Product --> Packages[Packages]
-    Product --> Tools[Custom tools]
-    Product --> MCPConnections[MCP connections and schema pins]
     Product --> Identity[Identity and policy]
     Product --> Provider[Provider connections]
     Product --> Distribution[MCP and widgets]
     Org --> Audit[Organisation audit history]
 ```
 
-An **organisation** is the administrative and audit boundary. A **product** owns delivery configuration and resources. **Environments** separate production from non-production operations. Access tokens are product-bound.
+An **organisation** is the administrative and audit boundary. A **product** owns delivery configuration and attached artifacts. Its **Product Definition** joins those artifacts to independently versioned API releases and compatibility profiles. A **product version** is an immutable snapshot of one profile and definition revision, with Latest, LTS, or deprecated lifecycle metadata. Exact customer pins use the authenticated vendor-organisation claim and override the product's default channel. Attaching establishes ownership; a version binding establishes compatibility. **Environments** separate production from non-production operations. Access tokens are product-bound.
 
 ## Protocol surfaces
 

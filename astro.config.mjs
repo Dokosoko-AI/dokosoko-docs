@@ -44,6 +44,7 @@ export default defineConfig({
 					label: 'Product guides',
 					items: [
 						{ label: 'Set up a product', slug: 'guides/product-setup' },
+						{ label: 'Build a Product Definition', slug: 'guides/product-definitions' },
 						{ label: 'Publish knowledge', slug: 'guides/sources' },
 						{ label: 'Deliver packages', slug: 'guides/packages' },
 						{ label: 'Create custom tools', slug: 'guides/custom-tools' },
