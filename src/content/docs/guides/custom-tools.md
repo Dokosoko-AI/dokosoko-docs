@@ -1,9 +1,9 @@
 ---
 title: Create custom tools
-description: Expose fixed vendor API operations as schema-validated, entitlement-aware, audited MCP tools.
+description: Expose fixed vendor API operations as schema-validated, grant-aware, audited MCP tools.
 ---
 
-Custom tools wrap vendor HTTP operations in a narrow policy boundary. The model discovers a documented tool and supplies structured input; DokoSoko retains control of the destination, credentials, authorization, confirmation, validation, and audit.
+Custom tools wrap vendor HTTP operations in a narrow policy boundary. The model discovers a documented tool and supplies structured input; DokoSoko retains control of the destination, delegated identity, grants, confirmation, validation, and audit.
 
 To bring in selected operations from an existing MCP server, use the managed [third-party MCP import workflow](/guides/mcp-bridges/) instead. Imported tools receive the same local policy and publication boundary.
 
@@ -57,9 +57,9 @@ To bring in selected operations from an existing MCP server, use the managed [th
 
 4. **Bind the fixed API action and policy.**
 
-   Select the HTTP method and enter one fixed HTTPS hook URL. Add a service credential only when the endpoint requires bearer authentication; DokoSoko encrypts it and never exposes it to the MCP client. Enter comma-separated entitlement keys that must all be enabled for discovery and execution.
+   Select the HTTP method and enter one fixed HTTPS operation on the configured vendor API origin. DokoSoko calls it with the authenticated developer's delegated vendor access token. Enter comma-separated grant keys that must all be active for discovery and execution.
 
-   ![The Create API tool form configured with a namespace, schemas, fixed HTTPS hook, and required entitlements.](/screenshots/custom-tool-create.jpg)
+   ![The Create API tool form configured with a namespace, schemas, fixed HTTPS operation, and required grants.](/screenshots/custom-tool-create.jpg)
 
    :::caution[The agent cannot choose the destination]
    Tool arguments become validated query parameters for `GET` or a JSON body for other methods. They cannot replace the configured host, path, HTTP method, or authorization header.
@@ -77,7 +77,7 @@ To bring in selected operations from an existing MCP server, use the managed [th
 
 7. **Verify discovery and execution.**
 
-   Reload tools in an authenticated MCP client and confirm `projects.create_ephemeral_sandbox` appears for an entitled test account but is absent for a user without `sandboxes.create` or `developer.pro`. Run a non-production call, validate the structured response, and confirm the execution appears in **Activity & audit** without arguments or credential plaintext.
+   Reload tools in an authenticated MCP client and confirm `projects.create_ephemeral_sandbox` appears for an authorized test account but is absent for a user without `sandboxes.create` or `developer.pro`. Run a non-production call, validate the structured response, and confirm the execution appears in **Activity & audit** without arguments or token plaintext.
 
 ## Define the contract
 
@@ -85,9 +85,8 @@ Create a tool with:
 
 - a stable name and description written for an agent;
 - JSON Schema input and output contracts;
-- one fixed HTTPS hook destination;
-- an encrypted service credential, if the hook requires one;
-- required vendor entitlements;
+- one fixed HTTPS destination on the configured vendor API origin;
+- required vendor grants;
 - a confirmation policy for consequential actions;
 - draft or published lifecycle state.
 
@@ -99,24 +98,17 @@ Schemas must use an object root with `additionalProperties: false`. DokoSoko rej
 sequenceDiagram
     participant A as Agent
     participant M as DokoSoko MCP
-    participant E as Entitlement policy
-    participant Z as Operation authorization
-    participant H as Fixed vendor hook
+    participant H as Fixed vendor API operation
     A->>M: Call published tool with JSON arguments
     M->>M: Validate identity, schema, and confirmation
-    M->>E: Resolve required entitlements
-    E-->>M: Allow or deny
-    M->>Z: Product, tool, subject, argument names
-    Z-->>M: Allow or deny
-    M->>H: Validated request + server credential
+    M->>M: Check customer state and required grants
+    M->>H: Validated request + delegated vendor token
     H-->>M: JSON response
     M->>M: Validate output and append audit event
     M-->>A: Structured result
 ```
 
-Argument values and the inbound DokoSoko token are not sent to the authorization hook. Policy or hook failures deny execution.
-
-See [Vendor hook contracts](/reference/vendor-hooks/) for the external authorization payload and custom tool transport rules.
+The inbound DokoSoko token is never sent to the vendor operation. Identity, grant, schema, confirmation, destination, transport, or output-validation failures deny execution.
 
 ## Design effective tools
 

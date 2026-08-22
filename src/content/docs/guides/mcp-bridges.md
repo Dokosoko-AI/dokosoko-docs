@@ -35,11 +35,11 @@ This keeps bridge state limited to reviewed configuration, schema pins, encrypte
 
 4. Choose **Connect & inspect**. DokoSoko calls `tools/list` with the strict v2 contract and requires one complete catalog.
 5. Review the untrusted tool names, descriptions, annotations, and schemas. Check only the tools that should enter this product.
-6. Add required DokoSoko entitlements and keep confirmation enabled for consequential operations.
+6. Add required DokoSoko grants and keep confirmation enabled for consequential operations.
 7. Import the selection. Each accepted tool is namespaced, normalized to a closed object input schema, schema-hashed, and saved as a local draft.
 8. Review and publish each draft from **Tools**. Nothing is published merely because it exists upstream.
 
-![The upstream catalog review dialog showing explicit tool selection, schema hashes, required entitlements, confirmation, and draft-only import.](/screenshots/stateless-mcpv2-import-review.jpg)
+![The upstream catalog review dialog showing explicit tool selection, schema hashes, required grants, confirmation, and draft-only import.](/screenshots/stateless-mcpv2-import-review.jpg)
 
 :::caution[Upstream annotations are not policy]
 DokoSoko stores annotations for review but never treats them as authorization, safety, or confirmation decisions. Local policy remains authoritative.
@@ -47,18 +47,16 @@ DokoSoko stores annotations for review but never treats them as authorization, s
 
 ## How user identity reaches the upstream
 
-The inbound DokoSoko access token is never forwarded. DokoSoko first authenticates that token, resolves the vendor identity and entitlements, validates the tool input and confirmation, and runs the per-operation authorization hook. Only after those checks pass does it choose an upstream credential.
+The inbound DokoSoko access token is never forwarded. DokoSoko first authenticates that token, resolves the customer account and grants, and validates the tool input and confirmation. Only after those checks pass does it choose an upstream credential.
 
 ```mermaid
 sequenceDiagram
     participant A as Agent
     participant D as DokoSoko Private MCP
-    participant Z as DokoSoko authz
     participant O as Upstream OAuth server
     participant U as Upstream MCPv2
     A->>D: tools/call + product-bound DokoSoko token
-    D->>Z: Identity, entitlements, tool, argument names
-    Z-->>D: Allow or deny
+    D->>D: Validate customer, grants, schema, and confirmation
     alt Delegated grant missing
         D-->>A: Authorize with mcp_connections.authorize
         A->>O: Authorization code + PKCE + upstream resource
@@ -80,10 +78,10 @@ For service mode, every entitled caller uses the connection’s encrypted upstre
 An imported call reaches the network only after all of these checks succeed:
 
 1. the tool is published and its pinned upstream schema has not drifted;
-2. the caller can discover the tool through required entitlements;
+2. the caller can discover the tool through required grants;
 3. arguments satisfy the pinned closed JSON Schema;
 4. required confirmation is present;
-5. the independent per-operation authorization hook allows the call;
+5. the customer account and installation are still active;
 6. the connection is active and an appropriate upstream credential exists.
 
 The upstream destination, protocol revision, method, tool name, and authorization header are server-controlled. Arguments cannot change them.

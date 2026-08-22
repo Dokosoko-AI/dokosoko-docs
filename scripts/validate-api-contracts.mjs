@@ -8,17 +8,78 @@ const contracts = [
 	{
 		name: 'Control Plane API',
 		path: resolve(docsRoot, '../dokosoko-service/api/openapi.yaml'),
-		bodylessOperations: new Set(['logout', 'queueSourceCrawl', 'inspectMCPConnection']),
+		bodylessOperations: new Set(['logout', 'queueSourceCrawl', 'inspectMCPConnection', 'publishIntegration', 'createSupportDeliveryAttempt', 'createWidgetSecret']),
+		requiredOperations: new Map(),
+	},
+	{
+		name: 'Widget Runtime API',
+		path: resolve(docsRoot, '../dokosoko-service/api/widget-runtime.openapi.yaml'),
+		bodylessOperations: new Set(),
+		requiredOperations: new Map([
+			['retrieveWidgetConfiguration', {
+				method: 'get',
+				path: '/v1/widgets/{widgetId}/configuration',
+			}],
+			['createWidgetSession', {
+				method: 'post',
+				path: '/v1/widget-sessions',
+				requestSchema: 'CreateWidgetSessionRequest',
+				requestFields: ['widgetId', 'userId', 'organizationId', 'origin'],
+				requiredRequestFields: ['widgetId', 'userId', 'origin'],
+			}],
+			['exchangeWidgetSession', {
+				method: 'post',
+				path: '/v1/widget-sessions/exchange',
+				requestSchema: 'ExchangeWidgetSessionRequest',
+				requestFields: ['bootstrapToken', 'origin'],
+				requiredRequestFields: ['bootstrapToken', 'origin'],
+			}],
+			['retrieveCurrentWidgetSession', {
+				method: 'get',
+				path: '/v1/widget-session',
+			}],
+			['createWidgetChatResponse', {
+				method: 'post',
+				path: '/v1/widget-chat',
+				requestSchema: 'WidgetChatRequest',
+				requestFields: ['message'],
+				requiredRequestFields: ['message'],
+			}],
+		]),
 	},
 	{
 		name: 'Provider API',
 		path: resolve(docsRoot, '../dokosoko-service/api/provider-openapi.yaml'),
 		bodylessOperations: new Set(),
+		requiredOperations: new Map(),
 	},
 	{
-		name: 'Vendor Hooks API',
-		path: resolve(docsRoot, '../dokosoko-service/api/hooks-openapi.yaml'),
+		name: 'Customer Identity Integration API',
+		path: resolve(docsRoot, '../dokosoko-service/api/identity-integration-openapi.yaml'),
 		bodylessOperations: new Set(),
+		requiredOperations: new Map([
+			['createAccessEvaluation', {
+				method: 'post',
+				path: '/v1/access/evaluations',
+				requestSchema: 'AccessEvaluationRequest',
+				requestFields: [],
+				requiredRequestFields: [],
+			}],
+		]),
+	},
+	{
+		name: 'Backend Integration API',
+		path: resolve(docsRoot, '../dokosoko-service/api/backend-integration-openapi.yaml'),
+		bodylessOperations: new Set(),
+		requiredOperations: new Map([
+			['createSupportSubmission', {
+				method: 'post',
+				path: '/v1/support-submissions',
+				requestSchema: 'SupportSubmissionRequest',
+				requestFields: ['submission_id', 'created_at', 'submission'],
+				requiredRequestFields: ['submission_id', 'created_at', 'submission'],
+			}],
+		]),
 	},
 ];
 
@@ -100,6 +161,39 @@ function validateContract(document, contract) {
 	}
 
 	if (operationCount === 0) fail(contract.name, 'contains no operations');
+	for (const [operationId, expected] of contract.requiredOperations) {
+		const operation = document.paths[expected.path]?.[expected.method];
+		if (operation?.operationId !== operationId) {
+			fail(contract.name, `${operationId} must be ${expected.method.toUpperCase()} ${expected.path}`);
+		}
+		if (expected.requestSchema) {
+			const rawSchema = operation.requestBody?.content?.['application/json']?.schema;
+			const expectedReference = `#/components/schemas/${expected.requestSchema}`;
+			if (rawSchema?.$ref !== expectedReference) {
+				fail(contract.name, `${operationId} must use ${expectedReference}`);
+			}
+			const schema = resolveReference(document, expectedReference, contract.name);
+			const fields = Object.keys(schema.properties ?? {}).sort();
+			const expectedFields = [...expected.requestFields].sort();
+			if (JSON.stringify(fields) !== JSON.stringify(expectedFields)) {
+				fail(contract.name, `${operationId} request must contain only ${expectedFields.join(', ')}`);
+			}
+			const required = [...(schema.required ?? [])].sort();
+			const expectedRequired = [...expected.requiredRequestFields].sort();
+			if (JSON.stringify(required) !== JSON.stringify(expectedRequired)) {
+				fail(contract.name, `${operationId} request must require only ${expectedRequired.join(', ')}`);
+			}
+		}
+		if (expected.forbiddenHeaders) {
+			const parameters = [...(operation.parameters ?? [])]
+				.map((parameter) => parameter?.$ref ? resolveReference(document, parameter.$ref, contract.name) : parameter);
+			for (const header of expected.forbiddenHeaders) {
+				if (parameters.some((parameter) => parameter?.in === 'header' && parameter.name.toLowerCase() === header.toLowerCase())) {
+					fail(contract.name, `${operationId} must not use redundant ${header} versioning`);
+				}
+			}
+		}
+	}
 	return operationCount;
 }
 

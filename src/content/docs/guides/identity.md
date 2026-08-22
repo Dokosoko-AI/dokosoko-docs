@@ -1,61 +1,69 @@
 ---
-title: Connect identity and policy
-description: Broker vendor OIDC through DokoSoko, resolve entitlements, and authorize sensitive operations independently.
+title: Connect identity and customer access
+description: Broker vendor OIDC, resolve durable customer accounts, and evaluate short-lived access grants.
 ---
 
-Private MCP and private widgets authenticate through DokoSoko’s OAuth broker. The vendor remains the identity authority; DokoSoko issues its own short-lived, product-bound access token after identity and entitlement checks succeed.
+Private MCP authenticates through DokoSoko's OAuth server. The vendor remains the identity authority; DokoSoko issues its own short-lived, resource-bound token after customer identity and access checks succeed.
 
-## Configure OIDC
+Embedded widgets use a different boundary: the customer application authenticates its own user, and its trusted backend creates a short-lived widget bootstrap with a widget-scoped server secret. Do not route widgets through the MCP OAuth flow. See [Embed an authenticated widget](/guides/embedded-widgets/).
 
-Provide the product with:
+## Configure the vendor connection
 
-- the vendor issuer and authorization, token, and user-info endpoints;
+Open **Settings → Identity & customer accounts** and provide:
+
+- the exact HTTPS vendor OIDC issuer;
 - an OIDC client ID and encrypted client secret;
-- exact downstream redirect URI allowlist entries;
-- the entitlement hook destination and service credential;
-- an optional independent operation-authorization hook.
+- scopes and an optional audience;
+- the claim containing the stable external customer ID;
+- an optional claim containing a stable installation ID;
+- one credential-free vendor API origin;
+- the stable vendor integration ID sent to access evaluation.
 
-Open **Settings → Vendor identity → Configure identity** and enter the values in one product-scoped configuration. Secret and authorization credential fields are write-only; leaving them blank in the example below prevents accidental disclosure.
+DokoSoko appends `POST /v1/access/evaluations` to the configured origin. The form does not accept an entitlement URL, usage URL, authorization URL, or arbitrary per-operation callbacks.
 
-![The Vendor identity and entitlements form with OIDC, hooks, scopes, and exact redirect URIs configured while secrets remain blank.](/screenshots/identity-configuration.jpg)
+The vendor OIDC callback is exact:
 
-Wildcards are not accepted in redirect URIs. Outside local development, all integration destinations must use HTTPS.
+```text
+https://YOUR_DOKOSOKO_ORIGIN/oauth/callback
+```
 
-Use the [Vendor Hooks interactive explorer](/api/vendor-hooks/) and [contract guide](/reference/vendor-hooks/) for the exact entitlement and per-tool authorization payloads.
+Wildcards are not accepted. Outside local development, the issuer and vendor API origin must use HTTPS.
+
+Use the [Customer Identity Integration API explorer](/api/identity-integration/) and [contract guide](/reference/vendor-integration-api/#customer-access-evaluation) for the request, response, idempotency, and failure contract.
 
 ## Authorization-code flow
 
 ```mermaid
 sequenceDiagram
-    participant C as MCP or widget client
+    participant C as MCP client
     participant D as DokoSoko
-    participant I as Vendor OIDC provider
-    participant E as Entitlement hook
-    C->>D: Authorize request + PKCE challenge
-    D->>I: Redirect to vendor sign-in
-    I-->>D: Exact callback with authorization code
-    D->>I: Exchange code and validate identity
-    D->>E: Resolve product entitlements
-    E-->>D: Entitlements or deny
-    D-->>C: One-time downstream authorization code
-    C->>D: Token request + PKCE verifier
-    D-->>C: Short-lived product-bound access token
+    participant I as Vendor OIDC
+    participant V as Customer Identity Integration API
+    C->>D: Authorization code + PKCE + resource=/mcp
+    D->>I: Authorization code + PKCE + nonce
+    I-->>D: Verified identity + vendor access token
+    D->>V: POST /v1/access/evaluations
+    V-->>D: Grants + expiry
+    D->>D: Resolve durable customer account
+    D-->>C: One-time authorization code
+    C->>D: Token request + verifier + resource=/mcp
+    D-->>C: Resource-bound DokoSoko token
 ```
 
-Authorization codes and access tokens are stored by digest, expire quickly, and cannot cross products.
+DokoSoko publishes authorization-server metadata at `/.well-known/oauth-authorization-server` and protected-resource metadata at `/.well-known/oauth-protected-resource/mcp`. Clients use the exact `/mcp` resource. Authorization and token requests require RFC 8707 resource binding and PKCE S256.
 
-## Keep policy layers distinct
+## Customer accounts
 
-Identity answers **who is this user?** Entitlements answer **what does their vendor account include?** The operation-authorization hook answers **may this user perform this particular sensitive action now?**
+The configured OIDC organisation claim is a vendor-owned external customer ID. DokoSoko resolves `(issuer, external_customer_id)` to a stable internal `customer_account` resource just in time after verified login.
 
-Both policy hooks fail closed. Keep them fast, observable, and independently testable. Avoid copying vendor business rules into DokoSoko; return stable entitlement identifiers that product resources can require.
+Administrators can list, suspend, and reactivate those accounts. They cannot create identity-backed accounts manually. Installations and version pins reference the internal account ID, never the external ID. A signed installation claim must match an active installation registered to that account; unknown or cross-account values fail closed.
 
-## Register the callback
+Suspension is checked every time an existing token is used, so it does not wait for token expiry.
 
-Register this callback at the vendor IdP:
+## Keep identity and grants distinct
 
-```text
-https://YOUR_DOKOSOKO_ORIGIN/oauth/callback/PRODUCT_ID
-```
+OIDC answers who the user and external customer are. The access evaluation returns which stable grants are currently active. DokoSoko defines tools and their `required_grants`; the vendor does not return tool definitions.
 
-Then configure each permitted client callback as an exact downstream redirect URI in the product’s identity settings.
+The evaluation expiry limits the DokoSoko token lifetime. Network errors, non-success statuses, invalid responses, missing customer identity, expired results, and suspended accounts all deny authorization.
+
+The vendor access token is encrypted and may be used for fixed vendor tool operations. The inbound DokoSoko token is never forwarded.

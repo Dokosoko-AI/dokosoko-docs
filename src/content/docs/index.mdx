@@ -1,10 +1,10 @@
 ---
 title: DokoSoko documentation
-description: Ship trusted product knowledge, packages, tools, and short-lived credentials to coding agents.
+description: Ship trusted product knowledge, API tools, and short-lived credentials to coding agents.
 template: splash
 hero:
   title: Your product, ready for coding agents.
-  tagline: DokoSoko is a self-hosted delivery control plane for publishing trustworthy knowledge, packages, policy-wrapped tools, and short-lived credentials.
+  tagline: DokoSoko is a self-hosted delivery control plane for publishing trustworthy knowledge, policy-wrapped API tools, and short-lived credentials.
   image:
     html: |
       <div class="delivery-preview" role="img" aria-label="DokoSoko validates delivery policy before exposing product resources to coding agents">
@@ -30,7 +30,7 @@ hero:
           </div>
           <div class="delivery-preview__surfaces" aria-hidden="true">
             <span>Knowledge</span>
-            <span>Packages</span>
+            <span>API contracts</span>
             <span>Tools</span>
             <span>Credentials</span>
           </div>
@@ -51,25 +51,28 @@ hero:
 
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## One control plane, four delivery surfaces
+## One control plane, five delivery surfaces
 
 <CardGrid stagger>
 	<Card title="Knowledge" icon="open-book">
 		Crawl, review, quarantine, and publish product guidance from immutable snapshots.
 	</Card>
-	<Card title="Packages" icon="puzzle">
-		Deliver public artifacts or stream credential-backed packages without exposing upstream secrets.
+	<Card title="API contracts" icon="puzzle">
+		Publish reviewed OpenAPI contracts and optionally generate SDKs in your delivery pipeline.
 	</Card>
 	<Card title="Tools" icon="setting">
-		Turn fixed HTTPS actions into schema-validated, entitlement-aware MCP tools.
+		Turn fixed HTTPS actions into schema-validated, grant-aware MCP tools.
 	</Card>
 	<Card title="Projects & credentials" icon="padlock">
 		Issue short-lived vendor resources through a standard, audited Provider API contract.
+	</Card>
+	<Card title="Authenticated widgets" icon="comment">
+		Embed a customer assistant with server-derived identity, exact-origin policy, and short-lived sessions.
 	</Card>
 </CardGrid>
 
 ## Built around explicit trust boundaries
 
-DokoSoko keeps resources private by default, separates user login from per-operation authorization, and never sends an inbound DokoSoko token to a vendor API. Public access is opt-in, read-only, and limited to resources that are both published and explicitly public.
+DokoSoko keeps resources private by default, resolves vendor identity to durable customer accounts, and never sends an inbound DokoSoko token to a vendor API. Public access is opt-in, read-only, and limited to resources that are both published and explicitly public.
 
 <LinkCard title="Understand the model" description="See the architecture, actors, and safety guarantees before you deploy." href="/concepts/why-dokosoko/" />

@@ -44,6 +44,14 @@ Open the configured origin, enter the one-time setup token, create the first roo
 
 Back up PostgreSQL, the DokoSoko artifact volume, and the exact master key as one recovery set. Test a restore before onboarding production credentials.
 
+## Breaking v3 upgrade
+
+Back up PostgreSQL and the encryption key before applying migration `0020_contract_v3.sql`. The migration preserves installations, customer version pins, encrypted support submissions, and their delivery credentials while replacing legacy customer strings with durable customer accounts.
+
+The migration intentionally invalidates outstanding OAuth states, authorization codes, and access tokens. It removes legacy vendor identity configuration because a fixed vendor API origin and stable integration ID cannot be inferred safely, and it disables support delivery until an administrator reviews and re-enables each route. Configure identity again, review or rotate support delivery credentials, re-enable the intended report kinds, and have MCP clients authenticate again.
+
+Legacy package artifacts and arbitrary hook configuration are removed. They do not have a faithful representation in the current API contract.
+
 ## Production checklist
 
 - TLS is valid at the exact configured public origin.
@@ -52,4 +60,4 @@ Back up PostgreSQL, the DokoSoko artifact volume, and the exact master key as on
 - The master key is stored in a secrets manager and recovery is tested.
 - Root administrators use individual accounts and TOTP.
 - Public MCP remains off unless anonymous access is intentionally required.
-- System Doctor passes after identity, package, and provider connections are configured.
+- System Doctor passes after identity and any required provider connections are configured.

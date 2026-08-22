@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Diagnose startup, readiness, crawling, OAuth, package, tool, and Public MCP failures.
+description: Diagnose startup, readiness, crawling, OAuth, tool, and Public MCP failures.
 ---
 
 Start with `/readyz`, then run **System Doctor** as a root administrator. Use the product’s integration runs and organisation audit feed to correlate failures without inspecting secret payloads.
@@ -23,26 +23,22 @@ Review the crawl’s page and byte budget, redirect findings, private-address re
 
 ## OAuth callback or token exchange fails
 
-- Match the vendor IdP callback exactly: `/oauth/callback/PRODUCT_ID`.
-- Match the client redirect URI to an exact product allowlist entry.
+- Match the vendor IdP callback exactly: `/oauth/callback`.
+- Match the client redirect URI to the exact URI in its HTTPS client metadata document.
 - Confirm the PKCE verifier belongs to the original challenge.
 - Check issuer and signing-key validation, clock skew, and code expiry.
-- Inspect entitlement-hook availability and deny responses.
-
-## A package download fails
-
-Check fixed origin resolution, redirect policy, upstream authentication, size limits, and configured SHA-256 and byte-size metadata. Fetch-mode URLs must be short-lived and still pass destination validation.
+- Inspect `POST /v1/access/evaluations`, its audience-bound vendor token, response expiry, and deny responses.
 
 ## A custom tool is missing or denied
 
-Confirm the tool is published, the caller has every required entitlement, and the operation-authorization hook allows the request. Validate the input schema, confirmation requirement, hook TLS, response schema, and timeout. Hook failures deny the operation by design.
+Confirm the tool is published, the customer account and installation are active, and the caller has every required grant. Validate the input schema, confirmation requirement, fixed vendor-origin destination, delegated token, response schema, and timeout. Any failed check denies the operation.
 
 ## Public MCP returns no resources
 
 All three gates must be open:
 
 1. Public MCP is enabled for the product.
-2. The source or package is published.
+2. The source is published.
 3. The resource visibility is explicitly public.
 
 Custom tools, projects, credentials, and private resources never appear on Public MCP.
@@ -50,4 +46,3 @@ Custom tools, projects, credentials, and private resources never appear on Publi
 ## Recovering from lost secrets
 
 If only the setup token is lost after setup, root administrators can continue operating normally. If the master key is lost, encrypted integration credentials cannot be recovered; restore the key from secret backup or replace every affected credential. Treat database, artifact, and master-key recovery as one tested procedure.
-

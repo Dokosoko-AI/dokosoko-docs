@@ -48,17 +48,17 @@ sequenceDiagram
 
 ## Connect the provider
 
-In **Projects & credentials**, add the fixed HTTPS base URL, service credential, required entitlements, contract version, and maximum lease TTL. Test authorization, project creation, issuance, expiry, retry, and revocation before publishing the MCP capabilities.
+In **Access**, add the fixed HTTPS base URL, service credential, required grants, contract version, and maximum lease TTL. Test authorization, instance creation, issuance, expiry, retry, and revocation before publishing the MCP capabilities.
 
 ![The Projects and credentials page before a Provider API is connected, showing its contract and secret-retention boundary.](/screenshots/projects-credentials.jpg)
 
 1. Choose **Connect provider**.
 2. Enter a recognizable provider name and one fixed HTTPS base URL.
 3. Enter the independently revocable service credential in the write-only field.
-4. Add the vendor entitlement keys required for project and credential operations.
+4. Add the vendor grant keys required for instance and credential operations.
 5. Set the maximum lease TTL, save, and run the conformance scenarios above.
 
-![The Connect Provider API form with a fixed origin, required entitlements, and lease TTL; the service credential is intentionally blank.](/screenshots/provider-configuration.jpg)
+![The Connect Provider API form with a fixed origin, required grants, and lease TTL; the service credential is intentionally blank.](/screenshots/provider-configuration.jpg)
 
 The example cannot be submitted because the service credential is blank. Enter it only in your own console; never place a real value in screenshots, tickets, or documentation.
 

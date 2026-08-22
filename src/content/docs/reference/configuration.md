@@ -23,7 +23,7 @@ Keep `DOKOSOKO_MASTER_KEY` stable and backed up. Rotating or losing it makes sto
 | `DOKOSOKO_UI_DIR` | `./dist/client` | Static console build directory |
 | `DOKOSOKO_DATA_DIR` | `./data` | Artifact and crawler data directory |
 | `DOKOSOKO_MIGRATIONS_DIR` | `./migrations` | Checksummed database migrations |
-| `DOKOSOKO_PUBLIC_URL` | `http://localhost:8080` | Must be an absolute origin with no path, query, or fragment |
+| `DOKOSOKO_PUBLIC_URL` | `http://localhost:8080` | Canonical browser-reachable origin for OAuth, MCP, setup prompts, and copied embed HTML; no path, query, or fragment |
 
 ## Crawler variables
 
@@ -33,6 +33,18 @@ Keep `DOKOSOKO_MASTER_KEY` stable and backed up. Rotating or losing it makes sto
 | `DOKOSOKO_CRAWLER_MAX_BYTES` | `5000000` | Maximum bytes accepted by one crawl |
 | `DOKOSOKO_DATABASE_URL` | — | Same database as the control plane |
 | `DOKOSOKO_DATA_DIR` | `/data` in the container | Shared artifact data directory |
+
+## Widget host variables
+
+These variables configure the separately deployed Next.js Chat SDK host from `dokosoko-widget-sdk/apps/widget-host`.
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `DOKOSOKO_API_URL` | `http://localhost:8080` | Exact DokoSoko runtime origin. HTTPS is required outside localhost; credentials, paths, queries, and fragments are rejected. |
+| `POSTGRES_URL` | — | PostgreSQL connection for durable Chat SDK state. If omitted, the host uses disposable in-memory state. |
+| `WIDGET_STATE_PREFIX` | `dokosoko-widget` | Namespace for widget-host state. |
+
+The widget secret is configured on the customer's authenticated backend, not on the widget host. Use a secret manager and expose it only to code importing `@dokosoko/widget-backend`.
 
 ## Development-only switches
 
@@ -45,4 +57,3 @@ Keep `DOKOSOKO_MASTER_KEY` stable and backed up. Rotating or losing it makes sto
 :::danger
 Development switches weaken persistence or transport expectations. Do not enable them in a production deployment.
 :::
-

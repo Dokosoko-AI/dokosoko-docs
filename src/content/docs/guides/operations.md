@@ -5,7 +5,9 @@ description: Monitor health, analytics, integration runs, and audit history with
 
 DokoSoko separates service health, product analytics, integration-run state, and append-only audit history so operators can answer different questions without inspecting private payloads.
 
-![The Analytics view showing activation, MCP, tool, package, and integration-run metrics.](/screenshots/analytics.jpg)
+The **Support reporting** inbox is intentionally separate from aggregate analytics and audit. It decrypts user-approved bug and feedback bodies only for authenticated administrators, while showing retry and external-ticket state without placing report content in analytics or audit events.
+
+![The Analytics view showing activation, MCP, tool, and integration-run metrics.](/screenshots/analytics.jpg)
 
 ## Health and readiness
 
@@ -23,7 +25,9 @@ Run **System Doctor** from **Settings** after deployment or any database, key, s
 
 ## Analytics
 
-Product analytics track authorized and active users, MCP channel use, tools, packages, integration runs, validated success, and daily volume. They intentionally exclude raw queries, argument values, tokens, and secret plaintext.
+Product analytics track authorized and active users, MCP channel use, effective immutable product-version IDs, tools, integration runs, validated success, and daily volume. Version dimensions also include the manifest hash, catalog revision, selection source, environment, and installation where applicable. They intentionally exclude raw queries, argument values, bearer tokens, prompts, and secret plaintext.
+
+Before deprecating a product version, review its 30-day MCP request/tool-call impact and every exact customer, environment, and installation pin. Release promotion, drift reconciliation, lifecycle changes, and assignment history also produce organisation audit events. LLM description rewrites record token usage and prompt-template version so daily budgets can be enforced without retaining the raw draft.
 
 Treat a metric change as a prompt for investigation, then use integration-run status and audit events to establish what happened.
 
@@ -41,7 +45,7 @@ Close each active run as **Validated** or **Failed** as soon as external evidenc
 
 ## Audit and recovery
 
-The organisation audit feed records administrative and security-relevant state transitions. Forward logs and metrics to your existing observability system, and alert on repeated policy failures, crawler quarantine spikes, package-integrity errors, and readiness failures.
+The organisation audit feed records administrative and security-relevant state transitions. Forward logs and metrics to your existing observability system, and alert on repeated access-evaluation failures, crawler quarantine spikes, support-delivery failures, and readiness failures.
 
 ![The append-only Activity and audit view, which excludes secret values.](/screenshots/activity-audit.jpg)
 
@@ -50,8 +54,10 @@ Back up PostgreSQL and the artifact volume together. Keep the 32-byte master key
 ## Routine checks
 
 1. Confirm `/readyz` and System Doctor are healthy.
-2. Review failed integration runs and policy-hook latency.
-3. Review crawl quarantines and pending publication changes.
-4. Check expiring provider credentials and integration certificates.
-5. Export or inspect audit history for unexpected administrative actions.
-6. Exercise backup restoration on a schedule.
+2. Review failed integration runs and access-evaluation latency.
+3. Review failed or held support submissions and verify endpoint idempotency.
+4. Review crawl quarantines and pending publication changes.
+5. Review pending product-version promotions, drift findings, partial rollouts, and deprecated-version impact.
+6. Check expiring provider credentials and integration certificates.
+7. Export or inspect audit and pin history for unexpected administrative actions.
+8. Exercise backup restoration on a schedule.
