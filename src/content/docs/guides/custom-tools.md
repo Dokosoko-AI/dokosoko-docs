@@ -3,25 +3,38 @@ title: Create custom tools
 description: Publish fixed HTTP operations as schema-validated, grant-aware, reviewed MCP tools.
 ---
 
-An HTTP tool wraps one fixed upstream operation in DokoSoko’s authorization and publication boundary. The agent supplies only schema-valid arguments; administrators own the endpoint, authentication, mappings, grants, confirmation, and limits.
+An HTTP tool wraps one fixed upstream operation in DokoSoko's authorization and publication boundary. The agent supplies only schema-valid arguments; administrators own the destination, mappings, grants, confirmation, and limits.
 
 For an existing MCP server, use [Import third-party MCP tools](/guides/mcp-bridges/). For reviewed in-process Go logic, use [Native tool plugins](/guides/native-tool-plugins/).
 
+## Choose tool ownership
+
+![The tool catalog lists reviewed common tools, their backend, policy risk, and publication state.](/screenshots/tools-catalog.jpg)
+
+| Tool type | Create it from | Destination and authentication |
+| --- | --- | --- |
+| API-owned | The API's **Tools** section | A relative operation path inherits the API's fixed base URL, Authorization method, and encrypted credential |
+| Common | **Tools → Catalog → Create HTTP tool** | The tool owns an independent fixed endpoint, authentication method, and write-only credential |
+
+![An API Tools section separates built-in knowledge, API-owned tools, attached common tools, and active action policies.](/screenshots/api-tools.jpg)
+
+An API-owned tool cannot store a second origin or independent credential. Use it for operations that belong to the API's shared runtime Authorization. Use a common tool for a fixed service that is intentionally reusable across APIs.
+
 ## Build the draft
 
-Open **Tools → Create HTTP tool** and define:
+Define:
 
 - a stable namespace, name, title, and action-focused description;
 - closed object input and output JSON Schemas;
-- one fixed credential-free endpoint and HTTP method;
+- a relative operation path for an API-owned tool, or one fixed credential-free endpoint for a common tool, plus the HTTP method;
 - explicit request and response mappings;
-- the upstream authentication type and any write-only credential;
+- for a common tool, the upstream authentication type and any write-only credential;
 - effect, identity requirement, grants, confirmation, idempotency, timeout, and size limits.
 
 Keep schema objects bounded and set `additionalProperties: false` unless an intentionally open object is essential. Use enums, length limits, numeric bounds, and explicit required fields.
 
 :::caution[Arguments cannot choose the destination]
-Tool arguments can fill only the reviewed mapping. They cannot replace the host, path template outside that mapping, method, token endpoint, authentication mode, or credential.
+Tool arguments can fill only the reviewed mapping. They cannot replace the host, path template outside that mapping, method, token endpoint, authentication mode, or credential. API-owned tools resolve those values from the bound API Authorization.
 :::
 
 ## Import or use advisory help
@@ -46,7 +59,7 @@ An administrator may explicitly consent to send that sanitized evidence to the c
 
 ## Publish and bind
 
-Publishing creates an immutable tool revision. Bind that exact revision and its authorization policy to the intended API, run API preflight, and publish a new API snapshot.
+Publishing creates an immutable tool revision. In the API's **Tools** section, manage API-owned tools separately from attached common tools and bind the exact tool revision with an exact active action-policy revision. Run API preflight, then publish a new API snapshot. See [Define authorization policies](/guides/authorization-policies/) for grants, action types, TTLs, and confirmation.
 
 Changing a published tool requires cloning it into a new draft. Retiring a tool makes existing exact bindings unresolved; remove or replace them before publishing the API again.
 

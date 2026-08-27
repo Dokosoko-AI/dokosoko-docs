@@ -3,7 +3,7 @@ title: Quickstart
 description: Run DokoSoko locally and complete the MFA-protected first-run setup.
 ---
 
-Run the complete local stack with Docker Compose, then create the first root administrator.
+Run the complete local stack with Docker Compose, then create the first root administrator and initial workspace.
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ Run the complete local stack with Docker Compose, then create the first root adm
 
 2. **Replace every required secret.**
 
-   Set a long database password and one-time setup token. `DOKOSOKO_MASTER_KEY` must be the standard-base64 encoding of exactly 32 random bytes.
+   Set a long database password and strong bootstrap setup token. `DOKOSOKO_MASTER_KEY` must be the standard-base64 encoding of exactly 32 random bytes.
 
 3. **Start the stack.**
 
@@ -33,17 +33,24 @@ Run the complete local stack with Docker Compose, then create the first root adm
 
    Open `http://localhost:8080`, enter the setup token, and create the root account.
 
-   ![The first-run root-user form with secret fields left blank.](/screenshots/root-setup.jpg)
+   ![The first-run form for creating the root administrator.](/screenshots/root-setup.jpg)
 
-   Enrol the generated TOTP secret in an authenticator and enter the current code.
+   On the next screen, scan the QR code with an authenticator app, or enter the displayed secret manually. Enter the current six-digit TOTP code to verify the enrolment and create the root user.
 
-   ![The mandatory TOTP enrollment step for the first root user.](/screenshots/mfa-enrollment.jpg)
+   Copy the one-use recovery codes into your password manager before selecting **I saved them, open console**. They are the only fallback if the authenticator becomes unavailable.
 
-   Store the one-use recovery codes in your password manager before continuing.
+5. **Create the initial workspace.**
 
-   ![The final first-run step displaying one-use recovery codes.](/screenshots/recovery-codes.jpg)
+   Enter the organisation, deployment name, and first environment. The environment defaults to `Production` and becomes the first production environment. Select **Create and open console** to finish onboarding.
 
-5. **Check readiness.**
+   To provision this identity centrally instead, copy and edit
+   `dokosoko.config.example.json`, mount it into both containers, and set
+   `DOKOSOKO_CONFIG_FILE` to its container path before step 3. The service
+   creates the configured organisation, deployment, and environments at
+   startup, so root setup opens the existing workspace rather than asking for
+   it again. See [Configuration](/reference/configuration/#managed-tenant-profile-and-initial-workspace).
+
+6. **Check readiness.**
 
    ```bash
    curl http://localhost:8080/healthz
@@ -53,6 +60,11 @@ Run the complete local stack with Docker Compose, then create the first root adm
 :::caution[Keep the master key stable]
 Stored credentials are encrypted with `DOKOSOKO_MASTER_KEY`. Losing it makes them unrecoverable.
 :::
+
+`DOKOSOKO_SETUP_TOKEN` is required only until the first MFA-protected root
+administrator is created. Remove it after setup. On subsequent starts, the
+service reads the persisted setup state and disables bootstrap without
+requiring the token.
 
 ## What runs
 

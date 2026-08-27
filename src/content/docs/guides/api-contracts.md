@@ -7,11 +7,11 @@ API contracts are deployment-owned Catalog assets. One validated contract revisi
 
 ## Create the contract root
 
-Open **Catalog → API contracts**, create a stable contract root, and set its display identity, visibility, and lifecycle. The root is mutable catalog metadata; published revisions are immutable.
+Open **Docs → API contracts**, create a stable contract root, and set its display identity, visibility, and lifecycle. The root is mutable catalog metadata; published revisions are immutable. The **Add API** wizard creates this root and starts ingestion automatically for its uploaded OpenAPI file.
 
 ## Attach OpenAPI evidence
 
-Attach an exact reviewed OpenAPI source publication to the contract root. Then ingest a candidate. DokoSoko normalizes the document into a contract graph and records its operations, schemas, security, diagnostics, source lineage, processor versions, and content hash.
+Attach one fixed deployment source to the contract root, then start ingestion. Attaching the source does not publish or approve a candidate. DokoSoko acquires the current source evidence, creates an immutable reviewable candidate, and normalizes it into a contract graph with operations, schemas, security, diagnostics, source lineage, processor versions, and content hash.
 
 ## Review and publish
 
@@ -21,7 +21,7 @@ Publishing creates one immutable validated revision. No model output can validat
 
 ## Attach the exact revision
 
-From an API’s **Resources** section, attach the published contract revision. Changing the contract root or publishing a newer revision does not move the API binding. Select the newer revision explicitly and publish a new API snapshot after reviewing downstream tool and recipe impact.
+From an API's **Resources** section, attach the published contract revision. The console always pins the exact selected revision. The control-plane API can instead request `follow_latest`; a later API publication then resolves the newest eligible revision but still freezes that exact revision into its resource snapshot. Review downstream tool and recipe impact before publishing the API again.
 
 ## Contract quality checklist
 

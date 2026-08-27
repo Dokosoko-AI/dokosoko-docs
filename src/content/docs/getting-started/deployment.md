@@ -14,16 +14,42 @@ DokoSoko ships as a Compose stack containing the service and console, an isolate
 
 ## Configure the stack
 
-Copy `.env.example` to `.env` in `dokosoko-service` and replace every required value:
+Copy `.env.example` to `.env` in `dokosoko-service` and replace every required
+value. The direct master-key variable may be omitted only when
+`security.master_key` in the mounted central file references a protected secret
+file:
 
 ```ini
 DOKOSOKO_DATABASE_PASSWORD=use-a-long-random-password
 DOKOSOKO_MASTER_KEY=standard-base64-for-exactly-32-random-bytes
-DOKOSOKO_SETUP_TOKEN=use-a-long-random-one-time-token
+DOKOSOKO_SETUP_TOKEN=use-a-long-random-bootstrap-token
 DOKOSOKO_PUBLIC_URL=https://dokosoko.example.com
 ```
 
 `DOKOSOKO_PUBLIC_URL` is a security boundary. It must be the exact browser-reachable origin without a path, query, or fragment. Terminate TLS at a trusted reverse proxy and forward the original scheme and host only from that proxy.
+
+For centrally managed startup and tenant settings, copy
+`dokosoko.config.example.json`, edit its `control_plane` values, mount the same
+read-only file into the service and crawler, and set its in-container path:
+
+```ini
+DOKOSOKO_CONFIG_FILE=/etc/dokosoko/dokosoko.config.json
+```
+
+```yaml
+# compose.config.yaml
+services:
+  dokosoko:
+    volumes:
+      - ./dokosoko.config.json:/etc/dokosoko/dokosoko.config.json:ro
+  crawler:
+    volumes:
+      - ./dokosoko.config.json:/etc/dokosoko/dokosoko.config.json:ro
+```
+
+Start with `docker compose -f compose.yaml -f compose.config.yaml up --build -d`.
+Commit non-secret configuration through your normal review workflow; reference
+secrets by environment variable or mounted file.
 
 ## Start and verify
 
@@ -36,7 +62,12 @@ curl https://dokosoko.example.com/readyz
 
 `/healthz` confirms the process is running. `/readyz` also checks persistence and migrations.
 
-Open the configured origin, create the first root administrator, complete TOTP enrolment, and store the recovery codes. Rotate or remove the setup token after setup.
+Open the configured origin, create the first root administrator, complete TOTP
+enrolment, and store the recovery codes. If `control_plane` did not provision an
+initial workspace, create the organisation, deployment, and first production
+environment in the console. After bootstrap, remove `DOKOSOKO_SETUP_TOKEN` from
+the deployment; persisted setup state keeps the bootstrap token path disabled
+on later restarts.
 
 ## Backups and recovery
 

@@ -53,7 +53,7 @@ Alert on:
 
 ## Routine checks
 
-- Review System Doctor and readiness.
+- Open **Settings → Overview**, run **System Doctor**, and review readiness.
 - Inspect failed or stale ingestion runs and retrieval traces.
 - Review API preflight before each publication.
 - Re-inspect upstream MCP schemas for drift.

@@ -41,7 +41,7 @@ Content attached only to another API cannot enter the candidate set. Results cit
 
 ## Query Lab
 
-Use **Catalog → Query Lab** before relying on an answer in MCP. Select global, API, or combined scope, then inspect:
+Use **Docs → Query Lab** before relying on an answer in MCP. Select global, API, or combined scope, then inspect:
 
 - resolved publication IDs and asset filters;
 - Map routing and ranked evidence;
@@ -49,6 +49,8 @@ Use **Catalog → Query Lab** before relying on an answer in MCP. Select global,
 - exclusions, token estimate, and latency in the bounded trace.
 
 A poor or empty result should lead to a source, review, selector, attachment, or index fix—not ungrounded prose.
+
+See [Use Query Lab](/guides/query-lab/) for the complete console workflow and trace interpretation.
 
 ## Advisory AI
 
@@ -58,7 +60,8 @@ Advisory output cannot validate, approve, attach, index, mutate, or publish an a
 
 ## Immutability rules
 
-- A newer root revision never upgrades an API binding.
+- The console pins documentation and contract bindings to exact revisions. The control-plane API can explicitly request `follow_latest`; an API publication still resolves and freezes one exact revision.
+- SDK bindings are exact-only and never advance automatically.
 - Detaching a binding never deletes shared Catalog content.
 - Historical publications remain readable even when a root or release is archived.
 - Yanked or archived SDK releases cannot be selected for new bindings or publications.

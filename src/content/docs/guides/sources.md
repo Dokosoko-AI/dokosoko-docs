@@ -7,13 +7,17 @@ Documentation moves through two explicit boundaries: source publication establis
 
 ## Add a source
 
-Create a source for one of the supported ingestion paths:
+Open **Docs → Sources**. The console can add a website or upload; the control-plane API also supports a fixed OpenAPI document URL.
+
+![The Sources screen shows ingestion health, indexed content, visibility, and review actions.](/screenshots/documentation-sources.jpg)
+
+Use one of the supported ingestion paths:
 
 | Kind | Input | Important boundary |
 | --- | --- | --- |
 | Website | Fixed public HTTP(S) start URL | Credential-free, same-origin, redirect, DNS, page, and byte checks |
-| OpenAPI | Fixed public HTTP(S) document URL | Same network controls plus structured validation |
-| Upload | Bounded UTF-8 files | Private upload volume, canonical paths, byte limits, and no symlinks |
+| OpenAPI | Fixed public HTTP(S) document URL through the control-plane API | Same network controls plus structured validation |
+| Upload | One bounded UTF-8 document | `.md`, `.mdx`, `.txt`, `.html`, `.htm`, `.json`, `.yaml`, or `.yml`; normally up to 5 MB in the private upload volume |
 
 The legacy `git` source kind remains reserved in the API for compatibility, but it is unsupported and hidden in the console.
 
@@ -32,7 +36,9 @@ Publish only the selected reviewed documents. The source publication is immutabl
 
 ## Create a documentation set
 
-From **Catalog → Documentation**, create a reusable set from exact source publications, documents, or sections. Selectors are applied before the set Map is built, so an excluded section cannot reappear through its parent document.
+Open **Docs → Documents** to search the normalized document explorer. Inspect each file's exact content, sections, Map, diagnostics, source run, and publication identity. Select reviewed files or sections, then choose **Save selection as set**. Existing sets remain available from the **Documentation sets** panel.
+
+Selectors are applied before the set Map is built, so an excluded section cannot reappear through its parent document.
 
 A set can be:
 
@@ -50,4 +56,6 @@ Treat public visibility as a data-release decision. Review every selected docume
 
 ## Refresh safely
 
-Acquire and review a new source publication, create a new documentation-set revision, and deliberately update each API binding that should adopt it. Existing API and global publications remain unchanged until replaced by an explicit publication action.
+Acquire and review a new source publication, then create a new documentation-set revision. The console pins every API binding to the selected revision. API clients may explicitly create a documentation binding with `follow_latest`; even then, an API publication resolves and freezes one exact revision. Existing API and global publications remain unchanged until an explicit publication action replaces them.
+
+Use [Query Lab](/guides/query-lab/) to verify that the intended global, API, or combined scope retrieves the new publication with immutable citations.

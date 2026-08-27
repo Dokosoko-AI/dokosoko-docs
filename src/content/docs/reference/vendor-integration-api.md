@@ -31,8 +31,8 @@ Return current stable grant keys and an explicit expiry:
 {
   "id": "aeval_01JY4R8T7N6M5K4J3H2G1F0E9D",
   "grants": ["developer.pro", "voice.calls.read"],
-  "expires_at": "2026-08-22T13:00:00Z",
-  "policy_version": "policy_2026_08_22"
+  "expires_at": "2030-08-22T13:00:00Z",
+  "policy_version": "policy_2030_08_22"
 }
 ```
 

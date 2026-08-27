@@ -14,7 +14,7 @@ They are not sandboxed extensions. DokoSoko does not load uploaded binaries, sha
 3. Run the strict source checker and review every transitive dependency.
 4. Import the package in `internal/nativeplugins/registry.go` and add its constructor to `Registered`.
 5. Configure only manifest-declared environment keys, then rebuild and deploy DokoSoko.
-6. Inspect **Tools → Native tool plugins**, review the staged source-backed tool drafts, and publish them normally.
+6. Open **Tools → Catalog**, inspect the **Native tools** section, review the staged source-backed tool drafts, and publish them normally.
 
 Registration is explicit. `init`-based discovery is forbidden.
 

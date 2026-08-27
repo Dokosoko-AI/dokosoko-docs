@@ -3,11 +3,11 @@ title: Troubleshooting
 description: Diagnose startup, readiness, ingestion, retrieval, OAuth, publication, tool, plugin, and MCP failures.
 ---
 
-Start with `/readyz`, then run **System Doctor** as a root administrator. Correlate failures with request IDs, immutable revision IDs, ingestion stages, and audit records without inspecting secret payloads.
+Start with `/readyz`, then open **Settings → Overview → Run System Doctor** as a root administrator. Correlate failures with request IDs, immutable revision IDs, ingestion stages, and audit records without inspecting secret payloads.
 
 ## Service does not start
 
-- Confirm `DOKOSOKO_SETUP_TOKEN` is strong and non-empty.
+- Before initial setup, confirm `DOKOSOKO_SETUP_TOKEN` is configured with a strong, non-empty value. It can and should be removed after setup completes.
 - Decode `DOKOSOKO_MASTER_KEY` and verify it is exactly 32 bytes.
 - Verify `DOKOSOKO_PUBLIC_URL` is an absolute origin without a path, query, or fragment.
 - Use HTTPS outside explicit local development.
@@ -53,4 +53,9 @@ Check every gate: immutable publication, explicit public visibility, public API 
 
 ## Recovering from a lost secret
 
-Losing the post-setup setup token does not prevent existing root administrators from operating. Losing the master key makes encrypted credentials unrecoverable; restore the exact key from escrow or replace every affected credential. Treat PostgreSQL, uploads, configuration, and master-key recovery as one tested procedure.
+The original bootstrap setup token is not needed after an MFA-protected root
+administrator exists. Remove it from the deployment; DokoSoko verifies the
+persisted setup state at restart. Losing the master key makes encrypted
+credentials unrecoverable; restore the exact key from escrow or replace every
+affected credential. Treat PostgreSQL, uploads, configuration, and master-key
+recovery as one tested procedure.

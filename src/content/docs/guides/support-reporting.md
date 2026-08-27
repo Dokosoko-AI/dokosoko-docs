@@ -14,7 +14,7 @@ The tools are absent until their matching deployment-level destination is config
 
 ## Configure destinations
 
-Open deployment settings and set either or both fixed HTTPS URLs. There is no per-API route and no separate delivery credential. Emptying a URL disables the matching tool for new submissions.
+Open **Settings → Tenant settings** and set either or both fixed HTTPS URLs. There is no per-API route and no separate delivery credential. Emptying a URL disables the matching tool for new submissions.
 
 The configured destination is snapshotted into each accepted outbox record. Delivery uses pinned DNS, no redirects, a stable submission ID as the idempotency key, bounded leases, and bounded retries.
 
@@ -45,7 +45,7 @@ queued → delivering → delivered
               └────→ queued retry → failed
 ```
 
-Administrators can list bounded metadata or open one exact report in the support outbox. The list includes state, attempts, safe failure category, and delivery timestamp without including full content.
+Administrators can list bounded metadata or open one exact report from **Support outbox**. The list includes state, attempts, safe failure category, and delivery timestamp without including full content. Use the adjacent **Recent audit** surface to correlate delivery changes without exposing report payloads in the event list.
 
 ## Operational checks
 

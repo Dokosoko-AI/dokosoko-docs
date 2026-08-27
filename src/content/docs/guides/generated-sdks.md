@@ -7,7 +7,7 @@ DokoSoko records exact SDK identities and reviewed content for agent retrieval. 
 
 ## Create or import a package
 
-Open **Catalog → SDKs** and either create a package identity or import one exact release from a supported public registry or HTTPS Git repository. Supported ecosystems include npm, PyPI, Go modules, and Cargo.
+Open **SDKs and packages → Packages** and either create a package identity or import one exact release from a supported public registry or HTTPS Git repository. Supported ecosystems include npm, PyPI, Go modules, and Cargo.
 
 Every release must use an exact version or immutable resolved commit. Version ranges, `latest`, and automatic upgrades are rejected.
 

@@ -7,7 +7,7 @@ DokoSoko can expose selected tools from an upstream MCP server through Private M
 
 ## Connect the upstream
 
-1. Open **MCP connections** and choose **Connect MCP**.
+1. Open **Tools → Connections** and choose **Connect MCP**.
 2. Enter a display name, local namespace, and one fixed public HTTPS endpoint.
 3. Enter the upstream service access token in the write-only field.
 4. Decide whether to forward the bounded signed DokoSoko identity envelope.
