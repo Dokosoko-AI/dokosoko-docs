@@ -1,34 +1,31 @@
 ---
-title: Integration API contracts
-description: Implement the separately authenticated customer identity and backend delivery operations called by DokoSoko.
+title: Customer Identity Integration API
+description: Implement the vendor-owned access-evaluation operation DokoSoko calls during Private MCP authorization.
 ---
 
-DokoSoko calls two deliberately separate vendor-owned contracts. They may use different HTTPS origins and never share credentials.
+The Customer Identity Integration API is optional and deliberately narrow. DokoSoko calls one fixed vendor-owned operation using the live delegated vendor access token obtained during OIDC sign-in.
 
-| Contract | Purpose | Authentication |
-| --- | --- | --- |
-| [Customer Identity Integration API](/api/identity-integration/) | Evaluate the currently authenticated customer during private MCP authorization | Live delegated vendor access token |
-| [Backend Integration API](/api/backend-integration/) | Deliver user-approved support submissions from the durable outbox | Encrypted service bearer scoped to one backend connection |
+[Open the read-only explorer](/api/identity-integration/) or [download the OpenAPI contract](/identity-integration-openapi.yaml).
 
-Download the canonical [identity OpenAPI contract](/identity-integration-openapi.yaml) and [backend OpenAPI contract](/backend-integration-openapi.yaml). The explorers cannot execute requests or accept credentials.
-
-## Customer access evaluation
-
-DokoSoko calls the fixed path on the delegated API origin:
+## Request
 
 ```http
 POST /v1/access/evaluations
 Authorization: Bearer VENDOR_USER_ACCESS_TOKEN
-Idempotency-Key: aeval_…
-X-External-Request-ID: req_…
+Idempotency-Key: aeval_0123456789abcdef0123456789abcdef
+X-External-Request-ID: req_0123456789abcdef0123456789abcdef
 Content-Type: application/json
 
 {}
 ```
 
-Derive the user and customer from the delegated access token. The request body is intentionally empty: it cannot override token identity or choose an integration.
+Derive the user and customer from the delegated token. The closed empty request body cannot override token identity or choose an API.
 
-Return a bounded grant evaluation with an explicit expiry:
+The token must be audience- or resource-bound to this delegated API where the provider supports that control. A DokoSoko bearer token is never sent to this endpoint.
+
+## Response
+
+Return current stable grant keys and an explicit expiry:
 
 ```json
 {
@@ -39,43 +36,18 @@ Return a bounded grant evaluation with an explicit expiry:
 }
 ```
 
-DokoSoko defines the tool catalog and required grants. The evaluation only narrows access. A timeout, transport error, non-success response, malformed body, expired result, or inactive customer denies authorization.
+DokoSoko defines the tool catalog and required grants. This response only narrows the caller’s current access and never creates a tool or widens a published resource scope.
 
-Retain the result for at least 10 minutes under the supplied idempotency key. Retries of one logical evaluation reuse that key and carry a new request ID.
+## Idempotency and failures
 
-## Backend support delivery
+Retain the result for at least ten minutes under the supplied idempotency key. Retries of the same logical evaluation reuse that key and carry a new external request ID.
 
-Bug reports and feedback share one operation on a configured backend connection:
+A timeout, transport error, non-success response, malformed body, expired evaluation, missing customer identity, inactive customer account, or denied grant fails closed. Return stable machine-readable errors without credential or customer-secret material.
 
-```http
-POST /v1/support-submissions
-Authorization: Bearer SERVICE_DELIVERY_CREDENTIAL
-Idempotency-Key: SUBMISSION_ID
-X-External-Request-ID: req_…
-Content-Type: application/json
-```
+## Deployment boundary
 
-DokoSoko sends a schema-bounded envelope containing the submission ID, creation time, user-approved report, trusted product and integration context, and contact information only when the user approved contact.
-
-Respond with `202 Accepted`:
-
-```json
-{
-  "id": "submission_01JY4S0R42",
-  "status": "accepted",
-  "external_id": "BUG-42",
-  "external_url": "https://support.vendor.example/tickets/BUG-42"
-}
-```
-
-Delivery is at least once. DokoSoko retries network failures, `408`, `429`, and `5xx` responses with the same idempotency key and a new request ID. Retain the result for at least 24 hours. Return the original result for the same key and payload, and `409` if a key is reused with a different payload. Other `4xx` responses are permanent.
-
-## Why the contracts are separate
-
-- A delegated customer token is not a service credential.
-- Identity evaluation is synchronous and fails closed during authorization.
-- Support delivery is asynchronous, durable, and at least once.
-- Identity and backend systems may have different origins and operational owners.
-- Disabling backend delivery must not break customer sign-in.
-
-Usage reporting is an ordinary API operation or policy-bound tool, not a special hook. Provider-owned instance and credential lifecycle uses the separate [Access Provider API](/reference/provider-api/). Package downloads and SDK registries remain outside the runtime contract. The control plane may embed bounded metadata for one exact externally hosted package release in an Integration manifest, but registries deliver the bytes. DokoSoko rejects URL userinfo, queries, fragments, and obvious credential-bearing install-command forms; operators must keep credentials out of URL paths and all free-text metadata. A separately operated verifier should check digest, optional provenance or SBOM, and installation before operational use, but DokoSoko neither stores that evidence nor enforces that it exists. DokoSoko does not download, sign, verify, or proxy packages.
+- Use one configured credential-free HTTPS origin; local HTTP is a development exception.
+- Do not redirect the request.
+- Keep responses bounded and complete within DokoSoko’s timeout.
+- Authenticate only with the delegated vendor token.
+- Keep access evaluation independent of support delivery, runtime tool credentials, and upstream MCP service tokens.

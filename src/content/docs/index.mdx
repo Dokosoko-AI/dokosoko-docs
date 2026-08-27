@@ -1,22 +1,22 @@
 ---
 title: DokoSoko documentation
-description: Ship trusted product knowledge, API tools, and short-lived credentials to coding agents.
+description: Publish reviewed developer assets, recipes, and policy-bound tools to coding agents through one self-hosted MCP connector.
 template: splash
 hero:
-  title: Your product, ready for coding agents.
-  tagline: DokoSoko is a self-hosted delivery control plane for publishing trustworthy knowledge, policy-wrapped API tools, and short-lived credentials.
+  title: Your APIs, ready for coding agents.
+  tagline: DokoSoko is a self-hosted MCP connector for publishing reviewed documentation, exact API and SDK references, recipes, and policy-bound tools.
   image:
     html: |
-      <div class="delivery-preview" role="img" aria-label="DokoSoko validates delivery policy before exposing product resources to coding agents">
+      <div class="delivery-preview" role="img" aria-label="DokoSoko reviews and snapshots developer assets before publishing them through MCP">
         <div class="delivery-preview__header">
-          <span class="delivery-preview__status"><span></span>Delivery active</span>
-          <code>production</code>
+          <span class="delivery-preview__status"><span></span>API published</span>
+          <code>immutable</code>
         </div>
         <div class="delivery-preview__flow">
           <div class="delivery-preview__node delivery-preview__node--source">
-            <span class="delivery-preview__eyebrow">Trusted sources</span>
-            <strong>Product resources</strong>
-            <span>Reviewed snapshots</span>
+            <span class="delivery-preview__eyebrow">Reviewed catalog</span>
+            <strong>Developer assets</strong>
+            <span>Exact revisions</span>
           </div>
           <div class="delivery-preview__connector">
             <span>Policy checked</span>
@@ -24,20 +24,20 @@ hero:
           <div class="delivery-preview__node delivery-preview__node--control">
             <span class="delivery-preview__mark">D</span>
             <div>
-              <span class="delivery-preview__eyebrow">Control plane</span>
+              <span class="delivery-preview__eyebrow">MCP connector</span>
               <strong>DokoSoko</strong>
             </div>
           </div>
           <div class="delivery-preview__surfaces" aria-hidden="true">
             <span>Knowledge</span>
-            <span>API contracts</span>
+            <span>Recipes</span>
             <span>Tools</span>
-            <span>Credentials</span>
+            <span>OAuth</span>
           </div>
         </div>
         <div class="delivery-preview__footer">
-          <span><span class="delivery-preview__check">✓</span>Scoped access</span>
-          <span><span class="delivery-preview__check">✓</span>Audited delivery</span>
+          <span><span class="delivery-preview__check">✓</span>Exact scope</span>
+          <span><span class="delivery-preview__check">✓</span>Audited publication</span>
         </div>
       </div>
   actions:
@@ -51,28 +51,31 @@ hero:
 
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## One control plane, five delivery surfaces
+## One reviewed delivery model
 
 <CardGrid stagger>
-	<Card title="Knowledge" icon="open-book">
-		Crawl, review, quarantine, and publish product guidance from immutable snapshots.
+	<Card title="Documentation" icon="open-book">
+		Acquire, normalize, review, map, and publish citation-ready product knowledge.
 	</Card>
-	<Card title="API contracts" icon="puzzle">
-		Publish reviewed OpenAPI contracts and optionally generate SDKs in your delivery pipeline.
+	<Card title="API contracts & SDKs" icon="puzzle">
+		Attach immutable OpenAPI revisions and exact externally hosted SDK releases to each API.
 	</Card>
 	<Card title="Tools" icon="setting">
-		Turn fixed HTTPS actions into schema-validated, grant-aware MCP tools.
+		Publish reviewed HTTP, upstream MCP, and compiled native tools behind fixed policy.
 	</Card>
-	<Card title="Projects & credentials" icon="padlock">
-		Issue short-lived vendor resources through a standard, audited Provider API contract.
+	<Card title="Recipes" icon="document">
+		Give connected coding agents evidence-grounded implementation plans for tangible product capabilities.
 	</Card>
-	<Card title="Authenticated widgets" icon="comment">
-		Embed a customer assistant with server-derived identity, exact-origin policy, and short-lived sessions.
+	<Card title="Private & Public MCP" icon="link">
+		Serve customer-authorized resources privately and explicitly public, read-only material anonymously.
+	</Card>
+	<Card title="Inspectable retrieval" icon="magnifier">
+		Use Maps, citations, Query Lab, and bounded traces to see exactly which immutable evidence was selected.
 	</Card>
 </CardGrid>
 
 ## Built around explicit trust boundaries
 
-DokoSoko keeps resources private by default, resolves vendor identity to durable customer accounts, and never sends an inbound DokoSoko token to a vendor API. Public access is opt-in, read-only, and limited to resources that are both published and explicitly public.
+DokoSoko keeps drafts private, separates publication from public visibility, fixes every runtime destination, and never forwards an inbound DokoSoko bearer token. Model output remains advisory until deterministic validation and human review establish a new immutable revision.
 
-<LinkCard title="Understand the model" description="See the architecture, actors, and safety guarantees before you deploy." href="/concepts/why-dokosoko/" />
+<LinkCard title="Understand the model" description="Review the architecture, asset ownership, and fail-closed boundaries before you deploy." href="/concepts/architecture/" />

@@ -1,16 +1,16 @@
 ---
 title: Production deployment
-description: Deploy DokoSoko behind TLS with durable storage, stable encryption, and operational checks.
+description: Deploy DokoSoko behind TLS with durable PostgreSQL, private uploads, stable encryption, and production checks.
 ---
 
-DokoSoko ships as a Docker Compose stack: the Go service and console, an isolated crawler worker, and PostgreSQL 17 with pgvector.
+DokoSoko ships as a Compose stack containing the service and console, an isolated crawler, and PostgreSQL 17 with pgvector.
 
 ## Before you deploy
 
-- Choose an HTTPS origin such as `https://dokosoko.example.com`.
-- Generate a strong database password and one-time setup token.
-- Generate exactly 32 random bytes and encode them with standard base64 for `DOKOSOKO_MASTER_KEY`.
-- Prepare persistent storage for PostgreSQL and DokoSoko artifact data.
+- Choose one exact external HTTPS origin, such as `https://dokosoko.example.com`.
+- Generate independent high-entropy database, setup-token, and 32-byte master-key secrets.
+- Prepare durable PostgreSQL storage and a private upload volume.
+- Restrict outbound traffic to the API, identity, AI, crawler, upstream MCP, and support destinations you intend to use.
 
 ## Configure the stack
 
@@ -23,7 +23,7 @@ DOKOSOKO_SETUP_TOKEN=use-a-long-random-one-time-token
 DOKOSOKO_PUBLIC_URL=https://dokosoko.example.com
 ```
 
-`DOKOSOKO_PUBLIC_URL` is a security boundary. It must be the exact external origin, without a path, query, or fragment. HTTPS is required outside localhost.
+`DOKOSOKO_PUBLIC_URL` is a security boundary. It must be the exact browser-reachable origin without a path, query, or fragment. Terminate TLS at a trusted reverse proxy and forward the original scheme and host only from that proxy.
 
 ## Start and verify
 
@@ -34,30 +34,30 @@ curl https://dokosoko.example.com/healthz
 curl https://dokosoko.example.com/readyz
 ```
 
-`/healthz` confirms the process is running. `/readyz` also checks persistence and applied migrations.
+`/healthz` confirms the process is running. `/readyz` also checks persistence and migrations.
 
-## Finish first-run setup
-
-Open the configured origin, enter the one-time setup token, create the first root administrator, and complete TOTP enrollment. Store the one-use recovery codes in a secure password manager, then rotate or remove the setup token from deployment configuration.
+Open the configured origin, create the first root administrator, complete TOTP enrolment, and store the recovery codes. Rotate or remove the setup token after setup.
 
 ## Backups and recovery
 
-Back up PostgreSQL, the DokoSoko artifact volume, and the exact master key as one recovery set. Test a restore before onboarding production credentials.
+Back up these items before every release and at least daily:
 
-## Breaking v3 upgrade
+- a PostgreSQL custom-format dump, including migration state;
+- the upload volume;
+- deployment configuration and the exact master key;
+- deployed image digests and source commit.
 
-Back up PostgreSQL and the encryption key before applying migration `0020_contract_v3.sql`. The migration preserves installations, customer version pins, encrypted support submissions, and their delivery credentials while replacing legacy customer strings with durable customer accounts.
-
-The migration intentionally invalidates outstanding OAuth states, authorization codes, and access tokens. It removes legacy vendor identity configuration because a fixed vendor API origin and stable integration ID cannot be inferred safely, and it disables support delivery until an administrator reviews and re-enables each route. Configure identity again, review or rotate support delivery credentials, re-enable the intended report kinds, and have MCP clients authenticate again.
-
-Legacy package-gateway credentials, stored bytes, proxy behavior, and arbitrary hook configuration are removed because they have no faithful representation in the current contract. The later optional package catalogue is metadata-only. Before recreating bounded exact release metadata and Integration bindings, operators should use a separately operated verifier to check the registry release. That is an operational prerequisite, not evidence stored or a condition enforced by DokoSoko. Registries still deliver bytes; DokoSoko does not download, sign, verify, or proxy packages.
+Test a restore at least quarterly. Require readiness, root MFA login, credential decryption, one reviewed document query, one safe Private MCP tool call, and the acceptance suite to pass. A backup is not valid until the drill succeeds.
 
 ## Production checklist
 
 - TLS is valid at the exact configured public origin.
-- Both health endpoints are monitored.
-- PostgreSQL and the artifact volume are durable and backed up together.
-- The master key is stored in a secrets manager and recovery is tested.
-- Root administrators use individual accounts and TOTP.
-- Public MCP remains off unless anonymous access is intentionally required.
-- System Doctor passes after identity and any required provider connections are configured.
+- PostgreSQL uses durable storage and pgvector; memory mode is disabled.
+- The upload volume and database are private.
+- The exact master key is escrowed in the protected recovery system.
+- `/healthz`, `/readyz`, support-outbox state, crawler leases, database health, and disk space are monitored.
+- Public MCP remains disabled unless anonymous publication is intentional.
+- Root-level feedback and error destinations are configured before their tools are advertised.
+- The standalone MCP acceptance client passes against every enabled surface.
+
+See [Operate DokoSoko](/guides/operations/) for the release, restore, alerting, and incident runbook.

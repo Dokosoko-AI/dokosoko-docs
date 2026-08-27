@@ -1,123 +1,66 @@
 ---
 title: Create custom tools
-description: Expose fixed vendor API operations as schema-validated, grant-aware, audited MCP tools.
+description: Publish fixed HTTP operations as schema-validated, grant-aware, reviewed MCP tools.
 ---
 
-Custom tools wrap vendor HTTP operations in a narrow policy boundary. The model discovers a documented tool and supplies structured input; DokoSoko retains control of the destination, delegated identity, grants, confirmation, validation, and audit.
+An HTTP tool wraps one fixed upstream operation in DokoSoko’s authorization and publication boundary. The agent supplies only schema-valid arguments; administrators own the endpoint, authentication, mappings, grants, confirmation, and limits.
 
-To bring in selected operations from an existing MCP server, use the managed [third-party MCP import workflow](/guides/mcp-bridges/) instead. Imported tools receive the same local policy and publication boundary.
+For an existing MCP server, use [Import third-party MCP tools](/guides/mcp-bridges/). For reviewed in-process Go logic, use [Native tool plugins](/guides/native-tool-plugins/).
 
-## Configure a custom MCP tool
+## Build the draft
 
-1. **Open the tool inventory.**
+Open **Tools → Create HTTP tool** and define:
 
-   Select the product, open **Tools**, and choose **Create tool**. Existing tools show whether they are still drafts or have been published to Private MCP.
+- a stable namespace, name, title, and action-focused description;
+- closed object input and output JSON Schemas;
+- one fixed credential-free endpoint and HTTP method;
+- explicit request and response mappings;
+- the upstream authentication type and any write-only credential;
+- effect, identity requirement, grants, confirmation, idempotency, timeout, and size limits.
 
-   ![The Custom tools inventory showing its policy boundary, published tools, drafts, and the Create tool action.](/screenshots/custom-tools.jpg)
+Keep schema objects bounded and set `additionalProperties: false` unless an intentionally open object is essential. Use enums, length limits, numeric bounds, and explicit required fields.
 
-2. **Define the MCP identity.**
+:::caution[Arguments cannot choose the destination]
+Tool arguments can fill only the reviewed mapping. They cannot replace the host, path template outside that mapping, method, token endpoint, authentication mode, or credential.
+:::
 
-   Enter a stable namespace, tool name, and action-focused description. MCP clients discover the tool as `namespace.name`, so treat the full name as a public API:
+## Import or use advisory help
 
-   | Field | Example | Guidance |
-   | --- | --- | --- |
-   | Namespace | `projects` | Group related operations under one short, stable prefix. |
-   | Tool name | `create_ephemeral_sandbox` | Use lower-case snake case and describe one operation. |
-   | Description | `Create a short-lived developer sandbox in an approved region.` | State the effect and important limits for the agent. |
+The Tool Builder can parse pasted cURL, Postman Collection, or OpenAPI text into reviewable candidates. It does not fetch a caller-supplied OpenAPI URL and removes detected credential material.
 
-3. **Add the input and output contracts.**
+The configured Analysis workload can propose or analyse a draft. Every change remains a field-level proposal. Deterministic validation is authoritative; AI cannot remove an error, save a tool, contact the endpoint, bind it to an API, or publish it.
 
-   Both schemas must have an object root. Set `additionalProperties` to `false`, bound strings and numbers, use enums for controlled choices, and list every value the operation requires.
+## Validate without a network call
 
-   ```json title="Input JSON Schema"
-   {
-     "type": "object",
-     "additionalProperties": false,
-     "properties": {
-       "name": { "type": "string", "minLength": 3, "maxLength": 50 },
-       "region": { "type": "string", "enum": ["us-east-1", "eu-west-1"] },
-       "ttl_seconds": { "type": "integer", "minimum": 900, "maximum": 86400 }
-     },
-     "required": ["name", "region", "ttl_seconds"]
-   }
-   ```
+Run **Contract check** first. It normalizes the draft, validates schemas, mappings, policy, credential presence, and the fixed destination without resolving DNS or making an upstream request.
 
-   ```json title="Output JSON Schema"
-   {
-     "type": "object",
-     "additionalProperties": false,
-     "properties": {
-       "sandbox_id": { "type": "string" },
-       "status": { "type": "string", "enum": ["creating", "ready"] },
-       "expires_at": { "type": "string", "format": "date-time" }
-     },
-     "required": ["sandbox_id", "status", "expires_at"]
-   }
-   ```
+Resolve every error before a live test. Warnings should be reviewed rather than mechanically dismissed.
 
-4. **Bind the fixed API action and policy.**
+## Run a controlled live test
 
-   Select the HTTP method and enter one fixed HTTPS operation on the configured vendor API origin. DokoSoko calls it with the authenticated developer's delegated vendor access token. Enter comma-separated grant keys that must all be active for discovery and execution.
+Live HTTP tests operate on one exact draft revision and the persisted fixed destination. Mutations require policy-enforced idempotency plus a short-lived confirmation bound to the canonical arguments. Delegated OAuth tools cannot be live-tested by a root administrator because that route never accepts an end-user token.
 
-   ![The Create API tool form configured with a namespace, schemas, fixed HTTPS operation, and required grants.](/screenshots/custom-tool-create.jpg)
+DokoSoko retains only short-lived sanitized structural evidence: status, duration, value-free JSON shapes, and bounded finding codes. It discards raw bodies, headers, scalar values, credentials, destination details, nonces, and idempotency keys.
 
-   :::caution[The agent cannot choose the destination]
-   Tool arguments become validated query parameters for `GET` or a JSON body for other methods. They cannot replace the configured host, path, HTTP method, or authorization header.
-   :::
+An administrator may explicitly consent to send that sanitized evidence to the configured Analysis provider. The result remains advisory.
 
-5. **Save and validate the draft.**
+## Publish and bind
 
-   Choose **Save draft**. DokoSoko rejects invalid JSON, unsupported schemas, unsafe destinations, and malformed policy configuration. Before publishing, test the fixed endpoint independently with representative success, denial, timeout, and invalid-output responses.
+Publishing creates an immutable tool revision. Bind that exact revision and its authorization policy to the intended API, run API preflight, and publish a new API snapshot.
 
-6. **Publish the tool to Private MCP.**
+Changing a published tool requires cloning it into a new draft. Retiring a tool makes existing exact bindings unresolved; remove or replace them before publishing the API again.
 
-   Find the new draft in the tool inventory and choose **Publish**. Publication creates an immutable runtime release; changing the definition later requires another reviewed release.
-
-   ![The Custom tools inventory showing the new sandbox tool as a draft with its Publish action.](/screenshots/custom-tool-publish.jpg)
-
-7. **Verify discovery and execution.**
-
-   Reload tools in an authenticated MCP client and confirm `projects.create_ephemeral_sandbox` appears for an authorized test account but is absent for a user without `sandboxes.create` or `developer.pro`. Run a non-production call, validate the structured response, and confirm the execution appears in **Activity & audit** without arguments or token plaintext.
-
-## Define the contract
-
-Create a tool with:
-
-- a stable name and description written for an agent;
-- JSON Schema input and output contracts;
-- one fixed HTTPS destination on the configured vendor API origin;
-- required vendor grants;
-- a confirmation policy for consequential actions;
-- draft or published lifecycle state.
-
-Schemas must use an object root with `additionalProperties: false`. DokoSoko rejects oversized or excessively complex schemas, remote references, more than 10 levels of nesting, and more than 64 properties. Keep each schema under 64 KiB.
-
-## Execution flow
+## Execution order
 
 ```mermaid
-sequenceDiagram
-    participant A as Agent
-    participant M as DokoSoko MCP
-    participant H as Fixed vendor API operation
-    A->>M: Call published tool with JSON arguments
-    M->>M: Validate identity, schema, and confirmation
-    M->>M: Check customer state and required grants
-    M->>H: Validated request + delegated vendor token
-    H-->>M: JSON response
-    M->>M: Validate output and append audit event
-    M-->>A: Structured result
+flowchart LR
+    Call[Tool call] --> Publication[Resolve exact published revision]
+    Publication --> Identity[Check identity and customer state]
+    Identity --> Grants[Check grants and authorization point]
+    Grants --> Input[Validate input and confirmation]
+    Input --> Destination[Resolve fixed destination and credential]
+    Destination --> Upstream[Make bounded upstream call]
+    Upstream --> Output[Validate output and record audit]
 ```
 
-The inbound DokoSoko token is never sent to the vendor operation. Identity, grant, schema, confirmation, destination, transport, or output-validation failures deny execution.
-
-## Design effective tools
-
-- Make one tool represent one stable operation.
-- Use enums and bounded strings instead of free-form payloads.
-- Require confirmation for writes, deletions, purchases, or other material effects.
-- Return identifiers and next actions rather than large unstructured responses.
-- Test deny, timeout, invalid-output, and credential-failure paths before publishing.
-
-:::note
-Use the standard Provider API for project creation and credential leases. Use custom tools for vendor-specific actions that do not fit that lifecycle.
-:::
+Any identity, publication, grant, confirmation, schema, destination, credential, transport, or output failure denies the operation.

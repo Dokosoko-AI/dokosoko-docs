@@ -1,48 +1,53 @@
 ---
-title: Publish knowledge
-description: Crawl product documentation, review immutable snapshots, and publish trusted knowledge to MCP clients.
+title: Publish documentation
+description: Acquire documentation safely, review normalized evidence, create reusable sets, and publish exact revisions.
 ---
 
-Sources turn vendor documentation into reviewed, citation-ready product knowledge. Every source begins private and unpublished.
-
-![The Sources view showing crawl health, review state, and publication controls.](/screenshots/sources.jpg)
+Documentation moves through two explicit boundaries: source publication establishes reviewed evidence, then a documentation set selects exact evidence for global or API delivery.
 
 ## Add a source
 
-1. Open a product and choose **Sources**.
-2. Choose **Add source** and select **Website**, **OpenAPI**, **Git repository**, or **SDK reference**.
-3. Enter a stable name and the fixed source location. New sources are private and draft.
-4. Save the source, start a crawl, and wait for the run to reach **Needs review** or another terminal state.
+Create a source for one of the supported ingestion paths:
 
-![The Add knowledge source form configured for an OpenAPI document.](/screenshots/source-configuration.jpg)
+| Kind | Input | Important boundary |
+| --- | --- | --- |
+| Website | Fixed public HTTP(S) start URL | Credential-free, same-origin, redirect, DNS, page, and byte checks |
+| OpenAPI | Fixed public HTTP(S) document URL | Same network controls plus structured validation |
+| Upload | Bounded UTF-8 files | Private upload volume, canonical paths, byte limits, and no symlinks |
 
-DokoSoko discovers pages from sitemaps first, uses a lightweight HTML parser where possible, and falls back to a browser for pages that need JavaScript. Destinations and redirects are revalidated to prevent the crawler from reaching private networks.
+The legacy `git` source kind remains reserved in the API for compatibility, but it is unsupported and hidden in the console.
 
-## Review before publishing
+Start an ingestion run and wait for a terminal review state. A run never becomes active knowledge automatically.
 
-Each crawl creates an immutable snapshot. Review the run for:
+## Review the source publication
 
-- failed or unexpectedly redirected pages;
-- quarantine findings and suspected prompt-injection text;
-- unusual page-count or byte-budget changes;
-- missing titles, content, or citations.
+Inspect normalized documents and their exact sections, content hashes, diagnostics, derived Map, and acquisition lineage. Review especially:
 
-Rejected or quarantined content never becomes active knowledge. Publishing promotes a reviewed snapshot atomically, so clients see either the previous snapshot or the complete replacement.
+- failed, skipped, redirected, duplicate, or unexpectedly empty content;
+- quarantine, suspected secret, or prompt-injection findings;
+- unexpected changes in coverage, bytes, or page count;
+- missing titles, broken structure, and incomplete OpenAPI parsing.
+
+Publish only the selected reviewed documents. The source publication is immutable and remains available as evidence after later crawls.
+
+## Create a documentation set
+
+From **Catalog → Documentation**, create a reusable set from exact source publications, documents, or sections. Selectors are applied before the set Map is built, so an excluded section cannot reappear through its parent document.
+
+A set can be:
+
+- published in the deployment-wide global documentation snapshot;
+- attached to one or more APIs at exact revisions;
+- both global and API-specific without duplicating content.
 
 ## Choose visibility
 
-Publication state and visibility are independent:
-
-| State | Private MCP | Public MCP |
-| --- | --- | --- |
-| Draft | Hidden | Hidden |
-| Published + private | Available to authorized users | Hidden |
-| Published + public | Available to authorized users | Available only when Public MCP is enabled |
+Publication and public visibility are independent. Private MCP may read published private assets within its authorized API scope. Public MCP requires an explicitly public asset, an explicitly public published API where applicable, and the deployment-wide Public MCP switch.
 
 :::caution
-Public visibility is an explicit data-publication decision. Confirm that the source contains no customer-only material before enabling it.
+Treat public visibility as a data-release decision. Review every selected document, section, citation, and Map entry before acknowledging it.
 :::
 
 ## Refresh safely
 
-Run a new crawl without unpublishing the current snapshot. Review the diff and findings, then publish the replacement. If a refresh is unhealthy, leave the last trusted snapshot active while you investigate.
+Acquire and review a new source publication, create a new documentation-set revision, and deliberately update each API binding that should adopt it. Existing API and global publications remain unchanged until replaced by an explicit publication action.

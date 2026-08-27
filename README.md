@@ -23,7 +23,7 @@ The product documentation site for DokoSoko, built with Astro and Starlight.
 | `pnpm build` | Generate the production site in `dist/` |
 | `pnpm preview` | Preview the generated production site |
 
-Run commands from `dokosoko-docs`. The build publishes the canonical contracts from `../dokosoko-service/api/` at `/openapi.yaml`, `/widget-runtime-openapi.yaml`, `/provider-openapi.yaml`, `/identity-integration-openapi.yaml`, and `/backend-integration-openapi.yaml`.
+Run commands from `dokosoko-docs`. The build publishes the canonical contracts from `../dokosoko-service/api/` at `/openapi.yaml` and `/identity-integration-openapi.yaml`.
 
 ## Authoring
 

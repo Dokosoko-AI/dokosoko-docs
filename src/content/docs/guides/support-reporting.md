@@ -1,86 +1,57 @@
 ---
 title: Collect bug reports and feedback
-description: Enable consent-gated Private MCP reporting tools, encrypted storage, and idempotent support delivery.
+description: Enable consent-gated Private MCP reporting tools and operate the plaintext durable delivery outbox.
 ---
 
-DokoSoko provides two optional, platform-owned Private MCP tools:
+DokoSoko provides two optional Private MCP tools:
 
-| Tool | Use |
+| Tool | Root destination |
 | --- | --- |
-| `support.report_bug` | Submit a connector-specific defect with reproduction details, errors, and bounded sanitized diagnostics |
-| `support.submit_feedback` | Submit feedback in the user's own meaning, with optional category and user-supplied rating |
+| `support.report_bug` | Error submission URL |
+| `support.submit_feedback` | Feedback submission URL |
 
-Neither tool is available on Public MCP. Each can be enabled independently.
+The tools are absent until their matching deployment-level destination is configured. They never appear on Public MCP.
 
-## Configure reporting
+## Configure destinations
 
-Open **Settings → Bug reports & feedback**.
+Open deployment settings and set either or both fixed HTTPS URLs. There is no per-API route and no separate delivery credential. Emptying a URL disables the matching tool for new submissions.
 
-1. Enable either or both tools.
-2. Enter the one support-delivery credential used with the configured vendor API origin.
-3. Choose encrypted retention between 1 and 365 days.
-4. Save and reload tools in an authenticated MCP client.
+The configured destination is snapshotted into each accepted outbox record. Delivery uses pinned DNS, no redirects, a stable submission ID as the idempotency key, bounded leases, and bounded retries.
 
-Enabling either submission kind requires the vendor API origin and one delivery credential. DokoSoko rejects an incomplete route instead of accepting reports it cannot deliver. A previously queued submission moves to `held` if its pinned route is later archived or disabled; reactivating that same route resumes matching held records. The credential is encrypted and never returned to the browser or MCP client.
+## Consent policy
 
-## Agent consent policy
+Before calling either tool, the agent must:
 
-DokoSoko supplies a fixed platform-owned instruction through server discovery and each tool definition. Before a report is submitted, the agent must:
+1. establish that the report concerns the connected product;
+2. prepare a concise sanitized report;
+3. show the user exactly what will be shared;
+4. obtain explicit approval;
+5. call the tool with the required confirmation metadata.
 
-1. Identify that the defect or feedback is related to the connector.
-2. Prepare a concise, sanitized report.
-3. Show the user a preview of exactly what will be shared.
-4. Obtain explicit approval.
-5. Call the tool with confirmation metadata.
+The server also validates a closed bounded schema and rejects likely credentials, bearer tokens, private keys, and JWTs. Agents must not send complete files, unrelated conversation, invented ratings, or unapproved contact data.
 
-The server does not rely on instructions alone. It requires `_meta.confirmed=true`, validates a closed bounded schema, and rejects likely credentials, bearer tokens, private keys, and JWTs. Agents must not submit complete files, unrelated conversation, invented ratings, or unapproved contact details.
+## Stored context
 
-## What DokoSoko adds
+The accepted report is stored as schema-bounded plaintext. DokoSoko adds trusted product and API publication context plus a pseudonymous reporter reference. It cannot recover prior chat history, source files, failed tool arguments, or raw requests automatically.
 
-The agent supplies the user-approved report body. DokoSoko adds trusted context it already knows:
+:::caution[The outbox is plaintext]
+Restrict administrative access, never submit credentials, and treat destination systems as processors of user-approved support data.
+:::
 
-- product and effective product version;
-- manifest hash and catalog revision;
-- selection source, environment, and installation;
-- authenticated subject and external customer ID;
-- request ID and confirmation time.
-
-Because the MCP endpoint is stateless, DokoSoko cannot recover a previous conversation, error, source file, or failed argument payload automatically. The agent must include the relevant sanitized details in the reporting call.
-
-Contact name and email are included only when `allow_contact` is explicitly approved. The authenticated subject remains available to the vendor for account-safe correlation.
-
-## Holding and delivery
-
-Every accepted submission is encrypted before it is stored. Only its kind, pseudonymous actor key, delivery state, attempt count, timestamps, and external ticket metadata remain plaintext for routing.
-
-Delivery uses a durable outbox:
+## Delivery states
 
 ```text
-pending → delivering → delivered
-             └──────→ pending retry → failed
-held ── route reactivated ──→ pending
+queued → delivering → delivered
+              └────→ queued retry → failed
 ```
 
-The submission ID is sent as `Idempotency-Key`; every attempt receives a new provider-neutral `X-External-Request-ID`. The vendor must create no more than one external record for that ID. Network failures, `408`, `429`, and `5xx` retry with bounded backoff; other `4xx` responses are permanent. Administrators can retry held or failed records after fixing delivery.
+Administrators can list bounded metadata or open one exact report in the support outbox. The list includes state, attempts, safe failure category, and delivery timestamp without including full content.
 
-The endpoint returns `202 Accepted` with:
+## Operational checks
 
-```json
-{
-	"id": "submission_01JY4S0R42",
-	"status": "accepted",
-  "external_id": "BUG-42",
-  "external_url": "https://support.vendor.example/tickets/BUG-42"
-}
-```
-
-See the [Backend Integration API contract](/reference/vendor-integration-api/#backend-support-delivery) for the complete delivery envelope.
-
-## Operational checklist
-
-- Test both tools with a minimally authorized account.
-- Confirm an unconfirmed call creates no inbox record.
-- Verify likely-secret detection with a disposable fake token.
-- Confirm Public MCP never lists or executes either tool.
-- Return the same external record when a submission ID is retried.
-- Review failed deliveries and retention before production rollout.
+- Confirm unconfirmed calls create no outbox record.
+- Test likely-secret rejection with disposable fake tokens.
+- Submit one feedback and one bug report in staging.
+- Confirm each arrives once and moves to `delivered`.
+- Alert on `failed` or `queued`/`delivering` records older than 15 minutes.
+- Confirm Public MCP never advertises either tool.

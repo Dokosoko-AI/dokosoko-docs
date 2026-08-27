@@ -1,15 +1,15 @@
 ---
 title: Quickstart
-description: Run DokoSoko locally and complete the secure first-run setup.
+description: Run DokoSoko locally and complete the MFA-protected first-run setup.
 ---
 
-Run a complete local DokoSoko stack with Docker Compose, then create the first MFA-protected root administrator.
+Run the complete local stack with Docker Compose, then create the first root administrator.
 
 ## Prerequisites
 
 - Docker with Compose v2
-- A password manager or operating-system cryptographic random generator
-- Ports `8080` available for DokoSoko
+- A password manager or cryptographic random generator
+- Port `8080` available
 
 1. **Create the local configuration.**
 
@@ -21,7 +21,7 @@ Run a complete local DokoSoko stack with Docker Compose, then create the first M
 
 2. **Replace every required secret.**
 
-   Set a strong database password and one-time setup token. `DOKOSOKO_MASTER_KEY` must be exactly 32 random bytes encoded with standard base64.
+   Set a long database password and one-time setup token. `DOKOSOKO_MASTER_KEY` must be the standard-base64 encoding of exactly 32 random bytes.
 
 3. **Start the stack.**
 
@@ -31,15 +31,15 @@ Run a complete local DokoSoko stack with Docker Compose, then create the first M
 
 4. **Create the first root administrator.**
 
-   Open `http://localhost:8080`, enter the setup token, and create the root account. The setup token and password are secret inputs and should come from your deployment configuration and password manager.
+   Open `http://localhost:8080`, enter the setup token, and create the root account.
 
-   ![The first-run root-user form with the setup token and password fields left blank.](/screenshots/root-setup.jpg)
+   ![The first-run root-user form with secret fields left blank.](/screenshots/root-setup.jpg)
 
-   Add the displayed TOTP secret to an authenticator, then enter the current six-digit code. The secret shown below is illustrative; your deployment generates a different value.
+   Enrol the generated TOTP secret in an authenticator and enter the current code.
 
    ![The mandatory TOTP enrollment step for the first root user.](/screenshots/mfa-enrollment.jpg)
 
-   Store the one-use recovery codes in your password manager before opening the console. The codes in the screenshot are examples, not valid credentials.
+   Store the one-use recovery codes in your password manager before continuing.
 
    ![The final first-run step displaying one-use recovery codes.](/screenshots/recovery-codes.jpg)
 
@@ -51,13 +51,13 @@ Run a complete local DokoSoko stack with Docker Compose, then create the first M
    ```
 
 :::caution[Keep the master key stable]
-Integration credentials are encrypted with `DOKOSOKO_MASTER_KEY`. Back it up securely before adding production credentials; losing it makes those credentials unrecoverable.
+Stored credentials are encrypted with `DOKOSOKO_MASTER_KEY`. Losing it makes them unrecoverable.
 :::
 
 ## What runs
 
-The Compose stack starts the Go control plane and static console, an isolated Crawlee/Playwright worker, and PostgreSQL 17 with pgvector. Database and artifact data use persistent volumes.
+The Compose stack starts the Go service and static console, an isolated crawler worker, and PostgreSQL 17 with pgvector. PostgreSQL and the private upload volume use durable volumes.
 
 ## Next step
 
-Create an organisation, product, and production environment in the console. The remaining guides explain how to publish the first knowledge source and connect agent access.
+Create the first API, attach reviewed documentation or an OpenAPI contract, configure runtime access if tools need it, and publish an immutable API snapshot. Follow [Set up and publish an API](/guides/api-setup/).

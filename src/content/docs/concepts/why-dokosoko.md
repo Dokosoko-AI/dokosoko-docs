@@ -1,31 +1,33 @@
 ---
 title: Why DokoSoko?
-description: Understand the problem DokoSoko solves and the principles behind it.
+description: Understand the problem DokoSoko solves and the boundaries it deliberately keeps.
 ---
 
-DokoSoko gives software vendors one self-hosted place to make their product usable by coding agents. It combines knowledge retrieval, API tools, OAuth, access grants, credential issuance, analytics, and audit without turning an agent into a trusted administrator.
+DokoSoko gives a software vendor one self-hosted MCP connector for the reviewed material coding agents need to use its APIs: documentation, contracts, exact SDK references, recipes, credentials, and tools.
 
 ## The problem
 
-Agent integrations tend to grow as separate systems: a documentation index, an MCP server, OAuth callbacks, custom API wrappers, and a separate analytics pipeline. Each boundary can drift, leak credentials, or apply a different publication policy.
+Agent support often grows as disconnected systems: a documentation index, an MCP server, OAuth callbacks, API wrappers, and generated setup prose. Those systems can select different versions, leak credentials, or silently drift away from what the vendor reviewed.
 
-DokoSoko brings those surfaces under one product and policy model.
+DokoSoko publishes one immutable API snapshot that resolves exact developer assets, authorization points, tool revisions, and runtime connections. Agents receive that reviewed state instead of a mutable collection of “latest” inputs.
 
 ## Design principles
 
-1. **Private by default.** Sources and tools begin as drafts. Publication and anonymous visibility are separate, explicit actions.
-2. **Policy before execution.** Short-lived vendor grants narrow discovery and execution.
-3. **Credentials stay server-side.** Vendor secrets are encrypted. Browsers and MCP clients do not receive persistent upstream credentials.
-4. **Content is untrusted input.** Crawled material is budgeted, scanned, reviewable, and can be quarantined before publication.
-5. **Success is auditable.** Administrative changes, policy decisions, integration runs, and validated outcomes have distinct records.
+1. **Private by default.** Draft, published, and publicly visible are separate states.
+2. **Exact over floating.** API publications pin exact documentation, contract, SDK, tool, and connection revisions.
+3. **Policy before execution.** Identity, customer state, grants, schemas, confirmation, and idempotency are checked before a tool runs.
+4. **Credentials stay server-side.** Secrets are write-only and encrypted; inbound DokoSoko tokens are never forwarded upstream.
+5. **Content is untrusted evidence.** Acquired material is bounded, normalized, reviewed, and published before retrieval.
+6. **AI stays advisory.** A model cannot approve, attach, execute, or publish anything.
 
 ## Who it is for
 
-- **Platform owners** deploy DokoSoko and maintain its security boundary.
-- **Product teams** publish knowledge, API contracts, and tools.
-- **Identity teams** connect OIDC, customer identity, and access evaluation.
-- **Agent developers** connect through private or public MCP; application developers embed authenticated widgets through their own backend identity boundary.
+- **Platform operators** deploy DokoSoko and maintain its security and recovery boundary.
+- **API teams** attach reviewed assets, configure runtime access, test tools, and publish APIs.
+- **Documentation and SDK owners** manage reusable deployment-wide Catalog assets.
+- **Identity teams** connect OIDC and the customer access-evaluation contract.
+- **Agent developers** connect through Private MCP or the optional read-only Public MCP surface.
 
 ## What it is not
 
-DokoSoko is not a general-purpose API gateway, identity provider, package registry, or autonomous code-execution environment. It may catalogue bounded metadata for an exact externally hosted package release, but the native registry delivers bytes. External verification is an operator-controlled process that DokoSoko does not perform, evidence, or enforce. DokoSoko coordinates developer integrations through fixed contracts and explicit policy.
+DokoSoko is not a developer portal, provisioning platform, widget runtime, package registry, registry proxy, API gateway, autonomous publishing agent, or support case-management system. It does not host package bytes, execute SDK source, invent compatibility, or automatically upgrade an API binding.

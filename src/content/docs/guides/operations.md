@@ -1,63 +1,61 @@
 ---
 title: Operate DokoSoko
-description: Monitor health, analytics, integration runs, and audit history without collecting sensitive payloads.
+description: Release, back up, monitor, restore, and respond to incidents in a self-hosted deployment.
 ---
 
-DokoSoko separates service health, product analytics, integration-run state, and append-only audit history so operators can answer different questions without inspecting private payloads.
+Rehearse this runbook in a production-shaped staging environment before inviting the first customer.
 
-The **Support reporting** inbox is intentionally separate from aggregate analytics and audit. It decrypts user-approved bug and feedback bodies only for authenticated administrators, while showing retry and external-ticket state without placing report content in analytics or audit events.
+## Release procedure
 
-![The Analytics view showing activation, MCP, tool, and integration-run metrics.](/screenshots/analytics.jpg)
+1. Build immutable service and crawler images from one reviewed commit. Record image digests and the migration checksum manifest.
+2. Run `pnpm run verify`, `go test -race ./...`, `go vet ./...`, dependency audit, and `govulncheck ./...`.
+3. Back up PostgreSQL, uploads, deployment configuration, and the exact master key. Verify the dump is readable.
+4. Deploy to staging. Startup applies append-only migrations and rejects checksum drift.
+5. Require `/healthz` and `/readyz` to return `200`.
+6. Run the standalone MCP acceptance client against every enabled surface.
+7. Deliver one staging feedback and one error report; verify both reach `delivered` exactly once.
+8. Deploy production, repeat read-only checks, and watch the release indicators through one normal traffic window.
 
-## Health and readiness
+Migrations are forward-only. Roll back an application only when the older binary understands the current schema. Otherwise roll forward with a corrective migration or restore the pre-release backup into a new environment.
 
-| Endpoint | Meaning |
-| --- | --- |
-| `GET /healthz` | The process is running |
-| `GET /readyz` | Required dependencies, including the database, are ready |
-| `GET /api/v1/system/doctor` | Authenticated diagnostic checks for root administrators |
+## Backup and restore
 
-Use readiness—not only liveness—for load balancer admission and deployment rollouts.
+Back up at least daily and before each release:
 
-Run **System Doctor** from **Settings** after deployment or any database, key, storage, public-origin, or worker configuration change.
+- PostgreSQL in a restorable format;
+- the private upload volume;
+- deployment configuration and master-key escrow;
+- source commit and deployed image digests.
 
-![Platform settings showing database, model-hardening, identity, root-security, and System Doctor controls.](/screenshots/system-settings.jpg)
+Test a restore at least quarterly in an isolated environment. Verify readiness, root MFA, credential decryption, one reviewed document query, one safe private tool call, and the MCP acceptance suite. Destroy the drill environment and record failures and follow-up work.
 
-## Analytics
+## Monitoring and alerts
 
-Product analytics track authorized and active users, MCP channel use, effective immutable product-version IDs, tools, integration runs, validated success, and daily volume. Version dimensions also include the manifest hash, catalog revision, selection source, environment, and installation where applicable. They intentionally exclude raw queries, argument values, bearer tokens, prompts, and secret plaintext.
+Alert on:
 
-Before deprecating a product version, review its 30-day MCP request/tool-call impact and every exact customer, environment, and installation pin. Release promotion, drift reconciliation, lifecycle changes, and assignment history also produce organisation audit events. LLM description rewrites record token usage and prompt-template version so daily budgets can be enforced without retaining the raw draft.
+- readiness failure, restart loops, panics, sustained `5xx`, and rising latency;
+- PostgreSQL exhaustion, slow queries, backup failures, storage growth, and less than 20% free disk;
+- crawler or developer-asset ingestion leases beyond their budget;
+- quarantine spikes, incomplete coverage, index failure, or stale ready generations;
+- forbidden-evidence evaluation failures or high retrieval no-result rates;
+- repeated OAuth, access-evaluation, grant, confirmation, or scope denials;
+- support records in `failed`, or `queued`/`delivering` beyond 15 minutes;
+- unexpected Public MCP enablement or Catalog visibility changes;
+- AI schema failures and budget exhaustion.
 
-Treat a metric change as a prompt for investigation, then use integration-run status and audit events to establish what happened.
+## Incident basics
 
-## Integration runs
-
-Runs are owner-scoped and move to deterministic terminal states. Record completion only after the external integration has reached a validated outcome; timeouts and partial work should finish as explicit failures rather than remaining ambiguous.
-
-Start a run with the environment and a concrete outcome that can be verified without storing secrets or raw prompts.
-
-![The Start integration run form with a production environment and a deterministic requested outcome.](/screenshots/integration-run-configuration.jpg)
-
-Close each active run as **Validated** or **Failed** as soon as external evidence is available. The first-pass rate is calculated from completed runs.
-
-![The Integration runs page showing one active, private run and its terminal-state actions.](/screenshots/integration-runs.jpg)
-
-## Audit and recovery
-
-The organisation audit feed records administrative and security-relevant state transitions. Forward logs and metrics to your existing observability system, and alert on repeated access-evaluation failures, crawler quarantine spikes, support-delivery failures, and readiness failures.
-
-![The append-only Activity and audit view, which excludes secret values.](/screenshots/activity-audit.jpg)
-
-Back up PostgreSQL and the artifact volume together. Keep the 32-byte master key in recoverable secret storage and test database, artifact, and key restoration before production onboarding.
+- Disable Public MCP first when exposure scope is uncertain.
+- Disable or rotate the affected root, OIDC, AI, upstream MCP, runtime, or tool credential at its owning boundary.
+- Preserve request IDs, audit records, publication revisions, image digests, and database timestamps.
+- Avoid preserving raw tool payloads unless the customer explicitly approves it.
+- For suspected master-key compromise, stop writes, preserve evidence, rotate every encrypted downstream credential, and migrate to a new deployment key. Changing only the environment value does not re-encrypt existing secrets.
 
 ## Routine checks
 
-1. Confirm `/readyz` and System Doctor are healthy.
-2. Review failed integration runs and access-evaluation latency.
-3. Review failed or held support submissions and verify endpoint idempotency.
-4. Review crawl quarantines and pending publication changes.
-5. Review pending product-version promotions, drift findings, partial rollouts, and deprecated-version impact.
-6. Check expiring provider credentials and integration certificates.
-7. Export or inspect audit and pin history for unexpected administrative actions.
-8. Exercise backup restoration on a schedule.
+- Review System Doctor and readiness.
+- Inspect failed or stale ingestion runs and retrieval traces.
+- Review API preflight before each publication.
+- Re-inspect upstream MCP schemas for drift.
+- Review native plugin state and required-plugin startup policy.
+- Confirm backup and restore evidence remains current.

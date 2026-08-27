@@ -1,75 +1,48 @@
 ---
-title: Generate SDKs from OpenAPI
-description: Decide when an SDK is useful, publish it through a native registry, and optionally catalogue exact release metadata in DokoSoko.
+title: Catalogue exact SDKs
+description: Manage deployment-owned SDK packages, exact releases, reviewed source evidence, and explicit API bindings.
 ---
 
-You do not need an SDK package to expose an endpoint through DokoSoko. Publish the OpenAPI description and expose consequential operations as policy-bound tools. Most agent integrations can call those operations directly.
+DokoSoko records exact SDK identities and reviewed content for agent retrieval. External registries still deliver package bytes.
 
-Generate an SDK only when developers benefit from language-native types, authentication helpers, retries, pagination helpers, or a stable distribution channel.
+## Create or import a package
 
-## Recommended pipeline
+Open **Catalog → SDKs** and either create a package identity or import one exact release from a supported public registry or HTTPS Git repository. Supported ecosystems include npm, PyPI, Go modules, and Cargo.
 
-Treat the OpenAPI document as the source of truth:
+Every release must use an exact version or immutable resolved commit. Version ranges, `latest`, and automatic upgrades are rejected.
 
-```text
-OpenAPI validation
-  -> breaking-change check
-  -> SDK generation
-  -> language formatter and compiler
-  -> generated contract tests
-  -> publish to the language registry
-```
+An SDK release may record:
 
-Run generation in CI from a pinned generator version and a checked-in configuration. Never hand-edit generated files. Fail the build when regeneration produces an uncommitted diff or the generated client no longer compiles.
+- ecosystem, coordinate, and exact version;
+- a verified install command;
+- optional public documentation and source URLs;
+- optional digest and visibility;
+- append-only lifecycle observations such as yanked or archived.
 
-A typical repository script can wrap your chosen generator:
+Transient import credentials are used only for that import and are not stored.
 
-```json
-{
-  "scripts": {
-    "sdk:generate": "openapi-generator-cli generate -i api/openapi.yaml -g typescript-fetch -o generated/typescript --config sdk/typescript.json",
-    "sdk:check": "pnpm sdk:generate && git diff --exit-code -- generated/typescript"
-  }
-}
-```
+## Review SDK content
 
-OpenAPI Generator is appropriate for broad language coverage. Stainless, Speakeasy, Fern, Kiota, and language-specific generators can be better when you want a more opinionated developer experience. The durable requirement is not the tool: pin the version, validate generated behavior, and make releases reproducible.
+You can submit bounded UTF-8 source files for static normalization. DokoSoko does not install dependencies, execute source, compile examples, or run package code.
 
-## DokoSoko widget SDK pipeline
+Review the candidate’s files, symbols, samples, diagnostics, citations, and deterministic SDK Map. Every included file and sample needs an explicit decision. A sample requires named machine evidence or non-empty structured human-review evidence before it can be approved.
 
-The [Widget Runtime API](/reference/widget-runtime-api/) is intentionally separate from the Control Plane API. Its TypeScript backend package follows a two-stage approach:
+Publishing creates an immutable SDK content publication for that exact release.
 
-1. `openapi-typescript` generates checked-in request and response types during the beta contract phase.
-2. A checked-in `stainless.yml` maps `createWidgetSession` to `widgetSessions.create` and becomes the release authority after the public contract is approved.
+## Attach a release to an API
 
-The handwritten layer is deliberately small. It enforces server-only use, validates the API origin before sending a secret, applies bounded timeouts and retries, and exposes structured errors with request IDs. It imports generated wire types instead of restating them.
+From the API’s **Resources** section, attach one exact SDK release and, when available, its reviewed content publication. Two APIs may select different releases of the same package. Adding or changing a package release never moves either binding.
 
-The browser loader is not generated from OpenAPI. Its job is DOM and iframe lifecycle, exact-origin messaging, and obtaining a bootstrap from the customer's same-origin endpoint. Combining it with the secret-bearing backend client would create an unsafe package boundary.
+Yanked or archived releases remain historically readable but cannot be used for a new binding or publication.
 
-## Keep SDK release concerns separate
+## Registry and supply-chain boundary
 
-Registry credentials belong in CI secret storage, not DokoSoko. Publish npm, Maven, NuGet, Go, Swift, or other artifacts through their native registries. DokoSoko may optionally catalogue one bounded package identity and immutable exact release metadata, then embed the selected release metadata in an Integration manifest. That metadata is compatibility guidance, not a runtime operation, download endpoint, or registry credential.
+DokoSoko does not host or proxy packages, store package-manager credentials, attest provenance, verify registry bytes, or claim compatibility. Use your normal release pipeline and independent supply-chain controls to build, test, sign, and publish the SDK.
 
-The artifact PURL must be unversioned and its type must match the ecosystem. Each release PURL must use that exact artifact identity and include a decoded version equal to the release version. Registry, source, provenance, and SBOM URLs must use HTTPS, except for loopback HTTP in local development, and cannot contain userinfo, a query, or a fragment. DokoSoko rejects obvious credential-bearing install-command forms, but URL paths and other free-text fields are not comprehensive secret scans; never enter credentials in package metadata.
+:::caution
+Never put credentials in install commands, URLs, source text, metadata, or review notes. DokoSoko applies bounded checks but cannot prove arbitrary free text is secret-free.
+:::
 
-The registry remains responsible for package bytes and access. DokoSoko validates metadata shape, PURL identity and exact-version consistency, strict URL policy, obvious install-command credential patterns, and SHA-256, SHA-384, or SHA-512 digest syntax only; it does not download, execute, sign, cryptographically verify, or proxy the SDK. Before operational use, use a separately operated external verifier to check registry bytes against the declared digest, validate optional provenance or SBOM material, and test installation. This is an operator-controlled step: DokoSoko does not record the evidence or block publication or binding when it is absent. Keep verifier credentials and evidence outside package metadata.
+## If you generate an SDK
 
-All artifact catalogue fields are editable only while the artifact is a draft. Publishing the first immutable release activates it, and Integration bindings never follow latest. Creating a public artifact, changing a private draft to public, and publishing each public release require explicit acknowledgement; a public Integration can bind only public metadata.
-
-Deprecation and retirement require guidance and the exact current revision. An optional replacement must be active and already have a published release. Deprecation may record a future sunset, but it makes the artifact unavailable immediately for releases, new bindings, and candidate publication; retirement is also immediate and preserves any existing sunset. Existing bindings remain readable and historical published Integration manifests are not rewritten. Remove the unavailable package from a future candidate or bind an available replacement explicitly.
-
-Version the HTTP API independently from SDK releases. A client package may release bug fixes without changing the API, and one API version may have several package versions. Avoid encoding package versions into API paths or access policy.
-
-## Before generating
-
-SDK quality is downstream of API quality. Confirm that the OpenAPI contract has:
-
-- stable operation IDs and resource-oriented names;
-- explicit request and response schemas;
-- consistent error envelopes;
-- idempotency semantics for retried mutations;
-- cursor pagination for growing collections;
-- documented authentication and resource binding;
-- no implementation-only fields or arbitrary URLs.
-
-Generating clients from an unstable contract makes the instability easier to distribute. Fix the contract first.
+Treat the reviewed OpenAPI contract as the source of truth. Pin the generator and configuration, format and compile the output, run contract tests, and fail CI when regeneration produces an unexplained diff. Publish through the ecosystem’s registry, then catalogue only the exact released version in DokoSoko.

@@ -1,35 +1,29 @@
 ---
 title: Connect identity and customer access
-description: Broker vendor OIDC, resolve durable customer accounts, and evaluate short-lived access grants.
+description: Broker vendor OIDC, resolve customer accounts, and evaluate short-lived grants for Private MCP.
 ---
 
-Private MCP authenticates through DokoSoko's OAuth server. The vendor remains the identity authority; DokoSoko issues its own short-lived, resource-bound token after customer identity and access checks succeed.
+Private MCP authenticates through DokoSoko’s OAuth server. The vendor remains the identity authority; DokoSoko issues its own short-lived token only after the current customer and access checks succeed.
 
-Embedded widgets use a different boundary: the customer application authenticates its own user, and its trusted backend creates a short-lived widget bootstrap with a widget-scoped server secret. Do not route widgets through the MCP OAuth flow. See [Embed an authenticated widget](/guides/embedded-widgets/).
+## Configure the identity provider
 
-## Configure the vendor connection
+Open **Identity & customer accounts** and configure:
 
-Open **Settings → Identity & customer accounts** and provide:
+- the exact HTTPS OIDC issuer;
+- client ID and write-only encrypted client secret;
+- scopes plus optional authorization audience or RFC 8707 resource;
+- the required ID-token claim containing the stable external customer ID;
+- the fixed credential-free authorization API origin.
 
-- the exact HTTPS vendor OIDC issuer;
-- an OIDC client ID and encrypted client secret;
-- scopes and an optional audience;
-- the claim containing the stable external customer ID;
-- an optional claim containing a stable installation ID;
-- one credential-free vendor API origin;
-- the stable vendor integration ID sent to access evaluation.
+DokoSoko appends `POST /v1/access/evaluations` to that origin. It does not accept arbitrary per-operation authorization URLs.
 
-DokoSoko appends `POST /v1/access/evaluations` to the configured origin. The form does not accept an entitlement URL, usage URL, authorization URL, or arbitrary per-operation callbacks.
-
-The vendor OIDC callback is exact:
+Register this exact callback with the provider:
 
 ```text
 https://YOUR_DOKOSOKO_ORIGIN/oauth/callback
 ```
 
-Wildcards are not accepted. Outside local development, the issuer and vendor API origin must use HTTPS.
-
-Use the [Customer Identity Integration API explorer](/api/identity-integration/) and [contract guide](/reference/vendor-integration-api/#customer-access-evaluation) for the request, response, idempotency, and failure contract.
+Save the draft, run a real OIDC test sign-in, and activate only the exact tested configuration revision.
 
 ## Authorization-code flow
 
@@ -38,32 +32,30 @@ sequenceDiagram
     participant C as MCP client
     participant D as DokoSoko
     participant I as Vendor OIDC
-    participant V as Customer Identity Integration API
+    participant A as Access evaluation API
     C->>D: Authorization code + PKCE + resource=/mcp
-    D->>I: Authorization code + PKCE + nonce
+    D->>I: OIDC authorization request
     I-->>D: Verified identity + vendor access token
-    D->>V: POST /v1/access/evaluations
-    V-->>D: Grants + expiry
-    D->>D: Resolve durable customer account
-    D-->>C: One-time authorization code
+    D->>A: POST /v1/access/evaluations with vendor token
+    A-->>D: Grants + expiry
+    D->>D: Resolve and check customer account
+    D-->>C: One-time DokoSoko authorization code
     C->>D: Token request + verifier + resource=/mcp
     D-->>C: Resource-bound DokoSoko token
 ```
 
-DokoSoko publishes authorization-server metadata at `/.well-known/oauth-authorization-server` and protected-resource metadata at `/.well-known/oauth-protected-resource/mcp`. Clients use the exact `/mcp` resource. Authorization and token requests require RFC 8707 resource binding and PKCE S256.
+DokoSoko publishes authorization-server metadata at `/.well-known/oauth-authorization-server` and protected-resource metadata at `/.well-known/oauth-protected-resource/mcp`.
 
-## Customer accounts
+## Access-evaluation contract
 
-The configured OIDC organisation claim is a vendor-owned external customer ID. DokoSoko resolves `(issuer, external_customer_id)` to a stable internal `customer_account` resource just in time after verified login.
+The request body is an empty object. The delegated vendor token—not caller-supplied fields—identifies the user and customer. The response returns bounded stable grant keys and an explicit expiry.
 
-Administrators can list, suspend, and reactivate those accounts. They cannot create identity-backed accounts manually. Installations and version pins reference the internal account ID, never the external ID. A signed installation claim must match an active installation registered to that account; unknown or cross-account values fail closed.
+Use the [Customer Identity Integration API guide](/reference/vendor-integration-api/) and [read-only explorer](/api/identity-integration/) when implementing this operation.
 
-Suspension is checked every time an existing token is used, so it does not wait for token expiry.
+## Customer accounts and grants
 
-## Keep identity and grants distinct
+DokoSoko resolves `(issuer, external customer ID)` to one durable customer account after verified login. Administrators may suspend or reactivate that account; they do not create identity-backed accounts manually. Suspension is checked when an existing token is used.
 
-OIDC answers who the user and external customer are. The access evaluation returns which stable grants are currently active. DokoSoko defines tools and their `required_grants`; the vendor does not return tool definitions.
+OIDC establishes identity. Access evaluation narrows current grants. DokoSoko still owns resource scope, authorization points, tool definitions, and confirmation policy. A timeout, denial, malformed or expired evaluation, missing customer claim, inactive account, or grant failure denies access.
 
-The evaluation expiry limits the DokoSoko token lifetime. Network errors, non-success statuses, invalid responses, missing customer identity, expired results, and suspended accounts all deny authorization.
-
-The vendor access token is encrypted and may be used for fixed vendor tool operations. The inbound DokoSoko token is never forwarded.
+The delegated vendor token is used only for the fixed access-evaluation request. The resulting DokoSoko token is never forwarded to vendor services.
