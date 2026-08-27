@@ -1,6 +1,6 @@
 ---
 title: Generate SDKs from OpenAPI
-description: Decide when an SDK is useful and automate it without adding a package abstraction to DokoSoko.
+description: Decide when an SDK is useful, publish it through a native registry, and optionally catalogue exact release metadata in DokoSoko.
 ---
 
 You do not need an SDK package to expose an endpoint through DokoSoko. Publish the OpenAPI description and expose consequential operations as policy-bound tools. Most agent integrations can call those operations directly.
@@ -48,7 +48,15 @@ The browser loader is not generated from OpenAPI. Its job is DOM and iframe life
 
 ## Keep SDK release concerns separate
 
-Registry credentials belong in CI secret storage, not DokoSoko. Publish npm, Maven, NuGet, Go, Swift, or other artifacts through their native registries. Record the SDK documentation as a source if agents need installation guidance, but do not model the artifact as a runtime DokoSoko resource.
+Registry credentials belong in CI secret storage, not DokoSoko. Publish npm, Maven, NuGet, Go, Swift, or other artifacts through their native registries. DokoSoko may optionally catalogue one bounded package identity and immutable exact release metadata, then embed the selected release metadata in an Integration manifest. That metadata is compatibility guidance, not a runtime operation, download endpoint, or registry credential.
+
+The artifact PURL must be unversioned and its type must match the ecosystem. Each release PURL must use that exact artifact identity and include a decoded version equal to the release version. Registry, source, provenance, and SBOM URLs must use HTTPS, except for loopback HTTP in local development, and cannot contain userinfo, a query, or a fragment. DokoSoko rejects obvious credential-bearing install-command forms, but URL paths and other free-text fields are not comprehensive secret scans; never enter credentials in package metadata.
+
+The registry remains responsible for package bytes and access. DokoSoko validates metadata shape, PURL identity and exact-version consistency, strict URL policy, obvious install-command credential patterns, and SHA-256, SHA-384, or SHA-512 digest syntax only; it does not download, execute, sign, cryptographically verify, or proxy the SDK. Before operational use, use a separately operated external verifier to check registry bytes against the declared digest, validate optional provenance or SBOM material, and test installation. This is an operator-controlled step: DokoSoko does not record the evidence or block publication or binding when it is absent. Keep verifier credentials and evidence outside package metadata.
+
+All artifact catalogue fields are editable only while the artifact is a draft. Publishing the first immutable release activates it, and Integration bindings never follow latest. Creating a public artifact, changing a private draft to public, and publishing each public release require explicit acknowledgement; a public Integration can bind only public metadata.
+
+Deprecation and retirement require guidance and the exact current revision. An optional replacement must be active and already have a published release. Deprecation may record a future sunset, but it makes the artifact unavailable immediately for releases, new bindings, and candidate publication; retirement is also immediate and preserves any existing sunset. Existing bindings remain readable and historical published Integration manifests are not rewritten. Remove the unavailable package from a future candidate or bind an available replacement explicitly.
 
 Version the HTTP API independently from SDK releases. A client package may release bug fixes without changing the API, and one API version may have several package versions. Avoid encoding package versions into API paths or access policy.
 

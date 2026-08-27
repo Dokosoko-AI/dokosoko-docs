@@ -61,7 +61,7 @@ pending → delivering → delivered
 held ── route reactivated ──→ pending
 ```
 
-The submission ID is sent as `Idempotency-Key`; every attempt receives a new `X-DokoSoko-Request-ID`. The vendor must create no more than one external record for that ID. Network failures, `408`, `429`, and `5xx` retry with bounded backoff; other `4xx` responses are permanent. Administrators can retry held or failed records after fixing delivery.
+The submission ID is sent as `Idempotency-Key`; every attempt receives a new provider-neutral `X-External-Request-ID`. The vendor must create no more than one external record for that ID. Network failures, `408`, `429`, and `5xx` retry with bounded backoff; other `4xx` responses are permanent. Administrators can retry held or failed records after fixing delivery.
 
 The endpoint returns `202 Accepted` with:
 

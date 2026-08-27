@@ -50,7 +50,7 @@ Back up PostgreSQL and the encryption key before applying migration `0020_contra
 
 The migration intentionally invalidates outstanding OAuth states, authorization codes, and access tokens. It removes legacy vendor identity configuration because a fixed vendor API origin and stable integration ID cannot be inferred safely, and it disables support delivery until an administrator reviews and re-enables each route. Configure identity again, review or rotate support delivery credentials, re-enable the intended report kinds, and have MCP clients authenticate again.
 
-Legacy package artifacts and arbitrary hook configuration are removed. They do not have a faithful representation in the current API contract.
+Legacy package-gateway credentials, stored bytes, proxy behavior, and arbitrary hook configuration are removed because they have no faithful representation in the current contract. The later optional package catalogue is metadata-only. Before recreating bounded exact release metadata and Integration bindings, operators should use a separately operated verifier to check the registry release. That is an operational prerequisite, not evidence stored or a condition enforced by DokoSoko. Registries still deliver bytes; DokoSoko does not download, sign, verify, or proxy packages.
 
 ## Production checklist
 

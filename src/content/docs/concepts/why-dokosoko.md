@@ -28,4 +28,4 @@ DokoSoko brings those surfaces under one product and policy model.
 
 ## What it is not
 
-DokoSoko is not a general-purpose API gateway, identity provider, package registry, or autonomous code-execution environment. It coordinates developer integrations through fixed contracts and explicit policy.
+DokoSoko is not a general-purpose API gateway, identity provider, package registry, or autonomous code-execution environment. It may catalogue bounded metadata for an exact externally hosted package release, but the native registry delivers bytes. External verification is an operator-controlled process that DokoSoko does not perform, evidence, or enforce. DokoSoko coordinates developer integrations through fixed contracts and explicit policy.

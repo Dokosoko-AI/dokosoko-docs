@@ -45,7 +45,7 @@ You need:
 - a deployed DokoSoko widget host, or the managed `https://widget.dokosoko.com` host.
 
 :::caution[The assistant profile is a launch requirement]
-DokoSoko will not activate a widget without an enabled assistant profile and encrypted provider credential. The model receives the current question and safe metadata for allowed APIs. It does not receive widget secrets, customer user IDs, customer organisation IDs, or vendor credentials.
+DokoSoko will not activate a widget without an enabled assistant profile and encrypted provider credential. The server-side agent selects only recipes and documentation pinned to the allowed APIs, then supplies that bounded context and short session history to the model. It does not supply widget secrets, customer user IDs, customer organisation IDs, or vendor credentials.
 :::
 
 ## 1. Create the widget
@@ -57,6 +57,8 @@ Configure:
 1. **Name** — the customer-facing assistant name.
 2. **Allowed origins** — exact application origins, one per line. Use HTTPS in production. Wildcards, paths, queries, fragments, and embedded credentials are rejected. `http://localhost` is accepted for development.
 3. **Allowed APIs** — the smallest set of APIs the assistant should be able to discuss.
+
+When the widget is activated, DokoSoko also pins the exact current recipe revisions scoped to those APIs. Publish at least one concise setup recipe before launch if customers will ask onboarding questions. After publishing a new recipe revision, choose **Refresh guidance** on the widget; active widgets never follow mutable guidance silently. If source or contract drift makes a recipe outdated, the widget keeps its last pinned revision and shows **Review guidance** instead of silently replacing or deleting it.
 
 Creation returns a `doko_wsk_...` widget secret once. Save it in the customer backend's secret manager. DokoSoko stores only its digest and a non-secret fingerprint.
 
@@ -195,6 +197,10 @@ Verify all of the following:
 - removing an API prevents subsequent messages from using it;
 - secrets and tokens do not appear in URLs, storage, logs, analytics, or error messages;
 - the assistant does not claim that it changed data or called an API when no tool result exists.
+- setup questions cite and follow the expected published recipe;
+- Markdown lists, code blocks, and paragraphs render correctly;
+- follow-up questions retain the selected API and recipe for the current session;
+- **Why this answer?** in admin preview shows only the expected recipe and documentation sources.
 
 ## Rotate credentials and revoke sessions
 

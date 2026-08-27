@@ -42,15 +42,25 @@ The `origin` is the exact browser application origin, such as `https://app.examp
 `POST /v1/widget-chat` accepts one message up to 4,000 characters. A successful response uses server-sent events:
 
 ```text
-data: {"text":"First chunk"}
+data: {"type":"source","source":{"kind":"recipe","title":"Connect ComplicatedAuth","revision":3,"integration":"ComplicatedAuth Customer API"}}
 
-data: {"text":" and the next chunk"}
+data: {"type":"text_delta","text":"## Setup\n\n1. Configure identity.\n"}
+
+data: {"type":"text_delta","text":"2. Verify the connection.\n"}
 
 data: [DONE]
 
 ```
 
-The hosted Chat SDK adapter consumes this stream. Clients should ignore malformed frames, stop on `[DONE]`, and request a new bootstrap when the session expires.
+`source` events identify the exact published guidance selected by the agent. `text_delta` preserves Markdown whitespace; concatenate its `text` values exactly as received. Admin-preview sessions also receive a `trace` event with bounded diagnostics such as intent, prompt version, and source counts. Customer sessions never receive that trace.
+
+The hosted Chat SDK adapter consumes this stream. Clients should ignore unknown event types, stop on `[DONE]`, and request a new bootstrap when the session expires.
+
+## Agent grounding
+
+Activating a widget pins both its exact API publications and every current, published, non-drifted recipe scoped to those APIs. The server-side agent selects from that immutable snapshot, reads only selected documentation publications, and keeps at most a short session-scoped conversation history. Publishing a newer recipe does not silently change a live widget; use **Refresh guidance** to adopt it. If a pinned recipe later needs review, the widget retains that activation-time revision until an administrator reviews and explicitly refreshes it.
+
+The browser cannot choose resources, expand the API allow-list, send customer identity into model context, or authorize an action. Tool execution remains unavailable until a separate confirmed-action policy is enabled by an administrator.
 
 ## SDK generation
 

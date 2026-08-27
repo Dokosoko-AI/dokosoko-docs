@@ -8,7 +8,20 @@ const contracts = [
 	{
 		name: 'Control Plane API',
 		path: resolve(docsRoot, '../dokosoko-service/api/openapi.yaml'),
-		bodylessOperations: new Set(['logout', 'queueSourceCrawl', 'inspectMCPConnection', 'publishIntegration', 'createSupportDeliveryAttempt', 'createWidgetSecret']),
+		bodylessOperations: new Set([
+			'checkRuntimeServiceConnection',
+			'createWidgetPreviewSession',
+			'logout',
+			'preflightIntegration',
+			'queueSourceCrawl',
+			'inspectMCPConnection',
+			'createSupportDeliveryAttempt',
+			'testAIProviderConnection',
+			'approveRecipe',
+			'publishRecipe',
+			'revokeRuntimeCredentialVersion',
+			'createWidgetSecret',
+		]),
 		requiredOperations: new Map(),
 	},
 	{
@@ -152,15 +165,24 @@ function validateContract(document, contract) {
 				}
 			}
 
-			if (['post', 'put', 'patch'].includes(method)
-				&& !contract.bodylessOperations.has(operation.operationId)
-				&& !operation.requestBody) {
-				fail(contract.name, `${operation.operationId} has no request body schema`);
+			if (['post', 'put', 'patch'].includes(method)) {
+				const declaredBodyless = contract.bodylessOperations.has(operation.operationId);
+				if (declaredBodyless && operation.requestBody) {
+					fail(contract.name, `${operation.operationId} is declared bodyless but defines a request body schema`);
+				}
+				if (!declaredBodyless && !operation.requestBody) {
+					fail(contract.name, `${operation.operationId} has no request body schema`);
+				}
 			}
 		}
 	}
 
 	if (operationCount === 0) fail(contract.name, 'contains no operations');
+	for (const operationId of contract.bodylessOperations) {
+		if (!operationIds.has(operationId)) {
+			fail(contract.name, `declared bodyless operation does not exist: ${operationId}`);
+		}
+	}
 	for (const [operationId, expected] of contract.requiredOperations) {
 		const operation = document.paths[expected.path]?.[expected.method];
 		if (operation?.operationId !== operationId) {

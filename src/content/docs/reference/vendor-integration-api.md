@@ -20,7 +20,7 @@ DokoSoko calls the fixed path on the delegated API origin:
 POST /v1/access/evaluations
 Authorization: Bearer VENDOR_USER_ACCESS_TOKEN
 Idempotency-Key: aeval_…
-X-DokoSoko-Request-ID: req_…
+X-External-Request-ID: req_…
 Content-Type: application/json
 
 {}
@@ -51,7 +51,7 @@ Bug reports and feedback share one operation on a configured backend connection:
 POST /v1/support-submissions
 Authorization: Bearer SERVICE_DELIVERY_CREDENTIAL
 Idempotency-Key: SUBMISSION_ID
-X-DokoSoko-Request-ID: req_…
+X-External-Request-ID: req_…
 Content-Type: application/json
 ```
 
@@ -78,4 +78,4 @@ Delivery is at least once. DokoSoko retries network failures, `408`, `429`, and 
 - Identity and backend systems may have different origins and operational owners.
 - Disabling backend delivery must not break customer sign-in.
 
-Usage reporting is an ordinary API operation or policy-bound tool, not a special hook. Provider-owned instance and credential lifecycle uses the separate [Access Provider API](/reference/provider-api/). Package downloads and SDK registries remain outside the runtime contract.
+Usage reporting is an ordinary API operation or policy-bound tool, not a special hook. Provider-owned instance and credential lifecycle uses the separate [Access Provider API](/reference/provider-api/). Package downloads and SDK registries remain outside the runtime contract. The control plane may embed bounded metadata for one exact externally hosted package release in an Integration manifest, but registries deliver the bytes. DokoSoko rejects URL userinfo, queries, fragments, and obvious credential-bearing install-command forms; operators must keep credentials out of URL paths and all free-text metadata. A separately operated verifier should check digest, optional provenance or SBOM, and installation before operational use, but DokoSoko neither stores that evidence nor enforces that it exists. DokoSoko does not download, sign, verify, or proxy packages.
